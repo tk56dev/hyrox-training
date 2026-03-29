@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MUKAI | HYROX TRAINING</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+
+/* ═══════════════════════════════════════════════════════════════
+   SETUP: Google Sheetsと連携するには、このHTMLをテキストエディタで
+   開き、下部の CONFIG.SHEET_URL に公開CSVのURLを入力してください。
+   詳細は下部の「SETUP INSTRUCTIONS」コメントを参照。
+═══════════════════════════════════════════════════════════════ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --black:    #000000;
+  --bg1:      #0D0D0D;
+  --bg2:      #141414;
+  --bg3:      #1E1E1E;
+  --border:   #2A2A2A;
+  --border2:  #383838;
+  --muted:    #555555;
+  --sub:      #888888;
+  --text:     #FFFFFF;
+  --red:      #E30613;
+  --red-dim:  #7a030a;
+  --green:    #16A34A;
+  --blue:     #2563EB;
+  --orange:   #D97706;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background: var(--black);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── HEADER ─────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  height: 60px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--black);
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-name {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  background: var(--red);
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px 2px;
+  color: #ffffff;
+}
+
+.brand-status {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* View toggle */
+.view-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+}
+
+.view-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 7px 16px;
+  cursor: pointer;
+  transition: all 0.12s;
+  border-right: 1px solid var(--border);
+}
+
+.view-btn:last-child { border-right: none; }
+.view-btn:hover { color: var(--text); }
+.view-btn.active { background: var(--text); color: var(--black); }
+
+/* Nav controls */
+.nav-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: border-color 0.12s;
+  flex-shrink: 0;
+}
+
+.nav-btn:hover { border-color: var(--text); }
+
+.period-label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  min-width: 200px;
+  text-align: center;
+}
+
+/* Today button */
+.today-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--sub);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.today-btn:hover { border-color: var(--text); color: var(--text); }
+
+/* ─── MAIN ───────────────────────────────────────────────── */
+.main {
+  flex: 1;
+  padding: 0 40px 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── TYPE LEGEND ────────────────────────────────────────── */
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 0 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+  overflow-x: auto;
+  padding-bottom: 14px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legend-label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--sub);
+}
+
+/* ─── MONTHLY VIEW ───────────────────────────────────────── */
+.monthly-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding-top: 16px;
+}
+
+.weekday-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 2px;
+}
+
+.weekday-label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 6px 10px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: minmax(110px, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  flex: 1;
+}
+
+.day-cell {
+  background: var(--bg1);
+  padding: 10px;
+  cursor: pointer;
+  transition: background 0.1s;
+  position: relative;
+  overflow: hidden;
+}
+
+.day-cell:hover { background: var(--bg2); }
+
+.day-cell.other-month {
+  background: var(--black);
+}
+
+.day-cell.other-month .day-num {
+  color: var(--border2);
+}
+
+.day-cell.is-today {
+  background: var(--bg2);
+}
+
+.day-num {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--sub);
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.today-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--red);
+  color: #fff;
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+}
+
+.event-chip {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0;
+  padding: 3px 6px 2px;
+  margin-bottom: 2px;
+  border-left: 2px solid var(--red);
+  background: rgba(255,255,255,0.04);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  color: var(--text);
+  transition: background 0.1s;
+}
+
+.event-chip:hover { background: rgba(255,255,255,0.1); }
+
+.event-chip.t-hyrox     { border-color: var(--red); }
+.event-chip.t-run       { border-color: var(--green); }
+.event-chip.t-strength  { border-color: var(--blue); }
+.event-chip.t-endurance { border-color: var(--orange); }
+.event-chip.t-race      { border-color: var(--red); background: var(--red-dim); color: #fff; }
+
+.more-count {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 10px;
+  color: var(--muted);
+  padding: 2px 6px;
+}
+
+/* ─── MOBILE: monthly chips → colored dots only ──────────── */
+@media (max-width: 640px) {
+  .event-chip {
+    font-size: 0 !important;
+    padding: 0 !important;
+    border-left: none !important;
+    background: transparent !important;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 1px 2px 1px 0;
+    flex-shrink: 0;
+  }
+  .event-chip.t-hyrox     { background: var(--red) !important; }
+  .event-chip.t-run       { background: var(--green) !important; }
+  .event-chip.t-strength  { background: var(--blue) !important; }
+  .event-chip.t-endurance { background: var(--orange) !important; }
+  .event-chip.t-race      { background: var(--red) !important; }
+  .day-num { font-size: 11px; }
+  .calendar-grid { grid-auto-rows: minmax(56px, 1fr); }
+  .day-cell { padding: 6px 5px; }
+  /* dots container needs flex */
+  .day-cell { display: flex; flex-direction: column; }
+  .dots-row { display: flex; flex-wrap: wrap; align-items: center; }
+}
+
+/* ─── WEEKLY VIEW ────────────────────────────────────────── */
+.weekly-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding-top: 16px;
+}
+
+.week-wrapper {
+  display: flex;
+  flex: 1;
+  border: 1px solid var(--border);
+  overflow: auto;
+}
+
+.time-col {
+  width: 52px;
+  flex-shrink: 0;
+  background: var(--black);
+  border-right: 1px solid var(--border);
+}
+
+.time-col-header {
+  height: 56px;
+  border-bottom: 1px solid var(--border);
+}
+
+.time-label {
+  height: 60px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 4px 8px 0 0;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.days-wrap {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  flex: 1;
+  gap: 1px;
+  background: var(--border);
+}
+
+.day-col {
+  background: var(--bg1);
+  display: flex;
+  flex-direction: column;
+}
+
+.day-col-header {
+  height: 56px;
+  padding: 10px 10px 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  flex-shrink: 0;
+}
+
+.wk-day-name {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.wk-day-num {
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
+  font-size: 26px;
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.day-col.wk-today .day-col-header {
+  border-bottom-color: var(--red);
+}
+
+.day-col.wk-today .wk-day-num {
+  color: var(--red);
+}
+
+.day-slots {
+  flex: 1;
+  position: relative;
+}
+
+.slot-row {
+  height: 60px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.wk-event {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  min-height: 22px;
+  padding: 4px 6px 3px;
+  border-left: 3px solid var(--red);
+  background: rgba(255,255,255,0.05);
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.1s;
+  overflow: hidden;
+}
+
+.wk-event:hover { background: rgba(255,255,255,0.1); }
+
+.wk-event-time {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 9px;
+  letter-spacing: 0;
+  color: var(--sub);
+  line-height: 1;
+}
+
+.wk-event-theme {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0;
+  color: var(--text);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wk-event.t-hyrox     { border-color: var(--red); }
+.wk-event.t-run       { border-color: var(--green); }
+.wk-event.t-strength  { border-color: var(--blue); }
+.wk-event.t-endurance { border-color: var(--orange); }
+.wk-event.t-race      { border-color: var(--red); background: var(--red-dim); }
+
+.all-day-bar {
+  position: relative;
+  margin: 4px 3px 0;
+}
+
+/* ─── DETAIL PANEL ───────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 300;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s;
+  overflow: hidden;
+}
+
+.overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.detail-panel {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-bottom: none;
+  width: 100%;
+  max-width: 600px;
+  /* Keep within viewport */
+  max-height: 78vh;
+  overflow-y: auto;
+  padding: 32px 36px 44px;
+  position: relative;
+  transform: translateY(24px);
+  transition: transform 0.18s;
+  flex-shrink: 0;
+}
+
+.overlay.open .detail-panel {
+  transform: translateY(0);
+}
+
+.detail-type-bar {
+  width: 40px;
+  height: 3px;
+  background: var(--red);
+  margin-bottom: 20px;
+}
+
+.detail-date-str {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.detail-theme {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 30px;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  margin-bottom: 14px;
+}
+
+.detail-time {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--red);
+  margin-bottom: 20px;
+}
+
+.detail-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.detail-notes-label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.detail-notes {
+  font-size: 15px;
+  color: var(--sub);
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.detail-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.12s;
+}
+
+.detail-close:hover { border-color: var(--text); }
+
+/* ─── EMPTY STATE ────────────────────────────────────────── */
+.empty-day {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--border2);
+  padding: 4px 0;
+}
+
+/* ─── STATUS BAR ─────────────────────────────────────────── */
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 0;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.status-left {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.status-right {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--border2);
+}
+
+/* ─── RESPONSIVE ─────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .header { padding: 0 20px; }
+  .main { padding: 0 20px 30px; }
+  .brand-status { display: none; }
+  .period-label { min-width: 140px; font-size: 13px; }
+  .detail-panel { padding: 28px 24px 40px; }
+  .detail-theme { font-size: 28px; }
+}
+
+@media (max-width: 640px) {
+  .brand-name { font-size: 18px; }
+  .today-btn { display: none; }
+  .days-wrap { grid-template-columns: repeat(7, minmax(80px, 1fr)); }
+}
+
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+  SETUP INSTRUCTIONS — Google Sheetsと連携する方法:
+
+  【手順 1】Google Spreadsheetを作成し、1行目にヘッダーを設定:
+    A列: date       → 例: 2026-03-29
+    B列: start      → 例: 06:00  （空欄でも可）
+    C列: end        → 例: 08:00  （空欄でも可）
+    D列: theme      → 例: Morning Run 10K（何でも自由記述）
+    E列: type       → HYROX / RUN / STRENGTH / ENDURANCE / RACE
+    F列: notes      → 詳細メモ（自由記述・空欄でも可）
+
+  【手順 2】「ファイル → 共有 → ウェブに公開」を選択
+    → シートを選択 → 「カンマ区切りの値（.csv）」→「公開」
+    → 表示されたURLをコピー
+
+  【手順 3】このファイルの末尾付近にある CONFIG.SHEET_URL に
+    コピーしたURLを貼り付けて保存
+    例: SHEET_URL: 'https://docs.google.com/spreadsheets/d/XXXX/pub?...'
+
+  【更新方法】Googleスプレッドシートに行を追記 → ページをリロード → 即反映！
+═══════════════════════════════════════════════════════════════ -->
+
+<!-- HEADER -->
+<header class="header">
+  <div class="brand">
+    <span class="brand-name">MUKAI</span>
+    <span class="brand-badge">WOD</span>
+    <span class="brand-status">HYROX Racer</span>
+  </div>
+  <div class="header-right">
+    <button class="today-btn" id="todayBtn">TODAY</button>
+    <div class="nav-wrap">
+      <button class="nav-btn" id="prevBtn">&#8592;</button>
+      <span class="period-label" id="periodLabel"></span>
+      <button class="nav-btn" id="nextBtn">&#8594;</button>
+    </div>
+    <div class="view-toggle">
+      <button class="view-btn active" id="btnMonth">MONTH</button>
+      <button class="view-btn" id="btnWeek">WEEK</button>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main" id="main">
+  <!-- rendered by JS -->
+</main>
+
+<!-- DETAIL PANEL OVERLAY -->
+<div class="overlay" id="overlay">
+  <div class="detail-panel">
+    <button class="detail-close" id="closeBtn">✕</button>
+    <div class="detail-type-bar" id="detailBar"></div>
+    <div class="detail-date-str" id="detailDateStr"></div>
+    <div class="detail-theme" id="detailTheme"></div>
+    <div class="detail-time" id="detailTime"></div>
+    <hr class="detail-divider">
+    <div class="detail-notes-label">NOTES</div>
+    <div class="detail-notes" id="detailNotes"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  CONFIG — ここを編集してください
+// ═══════════════════════════════════════════════════════════════
+const CONFIG = {
+  SHEET_URL: '',   // ← Google SheetsのCSV公開URLをここに貼り付ける
+  NAME: 'TAKTOSHI MUKAI',
+  START_HOUR: 5,   // 週間ビューの開始時刻（0〜23）
+  END_HOUR: 23,    // 週間ビューの終了時刻（0〜23）
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  MODE — URLパラメータで切り替え
+//  公開用:  index.html          → 月間カレンダーのみ・時刻非表示
+//  管理用:  index.html?private  → 週間切替あり・時刻表示
+// ═══════════════════════════════════════════════════════════════
+const IS_PRIVATE = new URLSearchParams(window.location.search).has('private');
+
+// ═══════════════════════════════════════════════════════════════
+//  SAMPLE DATA — SHEET_URLが未設定の場合はこのデータを使用
+// ═══════════════════════════════════════════════════════════════
+const SAMPLE = [
+  { date:'2026-03-23', start:'06:00', end:'07:30', theme:'Morning Run 10K',          type:'RUN',       notes:'4:30/km ターゲットペース\nウォームアップ2km + メイン8km' },
+  { date:'2026-03-24', start:'18:00', end:'20:00', theme:'HYROX WOD',                type:'HYROX',     notes:'Skierg 1000m × 3\nWall Balls 20kg × 50\nBurpee Broad Jump 12.5m × 2' },
+  { date:'2026-03-25', start:'07:00', end:'08:30', theme:'Strength — Lower Body',    type:'STRENGTH',  notes:'Sled Push 100kg / 30m × 8\nDeadlift 5×5\nHip Thrust 4×12' },
+  { date:'2026-03-26', start:'',      end:'',      theme:'Recovery',                 type:'ENDURANCE', notes:'アクティブリカバリー\nフォームローラー・ストレッチ30min' },
+  { date:'2026-03-27', start:'06:00', end:'07:30', theme:'RowErg 5K + Skierg',       type:'ENDURANCE', notes:'RowErg 5K — 19:30以内\nSkierg 1000m × 5 — 4:00以内/本' },
+  { date:'2026-03-28', start:'10:00', end:'12:00', theme:'HYROX Full Simulation',    type:'HYROX',     notes:'8種目フルシミュレーション\n目標タイム 58:00\nStation 1→8 ノンストップ' },
+  { date:'2026-03-29', start:'07:30', end:'09:00', theme:'Long Run 15K',             type:'RUN',       notes:'5:00/km イージーペース\nフォーム確認・呼吸維持' },
+  { date:'2026-03-30', start:'18:30', end:'20:00', theme:'Strength — Upper Body',    type:'STRENGTH',  notes:'Kettlebell Press 5×8\nPull-up 4×Max\nCore Circuit 3ラウンド' },
+  { date:'2026-03-31', start:'06:00', end:'07:00', theme:'Tempo Run 8K',             type:'RUN',       notes:'4:15/km テンポペース\nウォームアップ1km + テンポ6km + CD1km' },
+  { date:'2026-04-01', start:'19:00', end:'21:00', theme:'HYROX WOD — High Intensity', type:'HYROX',  notes:'強度高め。レースペース意識\nStation 5〜8 集中強化' },
+  { date:'2026-04-02', start:'',      end:'',      theme:'Recovery + Mobility',      type:'ENDURANCE', notes:'ヨガ40min\nフォームローラー全身' },
+  { date:'2026-04-03', start:'06:30', end:'08:00', theme:'Sled Push & Pull Circuit', type:'STRENGTH',  notes:'Sled Push 30m × 8\nSled Pull 30m × 8\nKettlebell Swing 4×20' },
+  { date:'2026-04-04', start:'10:00', end:'11:00', theme:'Run Intervals 10K',        type:'RUN',       notes:'1K × 5 @ 3:50/km\nRI 2min easy jog\n合計10km' },
+  { date:'2026-04-05', start:'18:00', end:'20:00', theme:'HYROX WOD',                type:'HYROX',     notes:'レース2週間前 — ボリューム調整\n強度は維持' },
+  { date:'2026-04-06', start:'07:00', end:'08:00', theme:'Easy Run 6K',              type:'RUN',       notes:'リカバリーラン\n5:30/km 以下のペース' },
+  { date:'2026-04-10', start:'09:00', end:'18:00', theme:'HYROX RACE — TOKYO 2026',  type:'RACE',      notes:'HYROX Tokyo 2026\n本番レース\nELITE15 突破目標' },
+  { date:'2026-04-12', start:'',      end:'',      theme:'Post-Race Recovery',        type:'ENDURANCE', notes:'レース後リカバリー\nアイスバス・マッサージ' },
+  { date:'2026-04-14', start:'07:00', end:'08:30', theme:'Return to Training',        type:'RUN',       notes:'復帰ラン 8K\nペース自由・フィーリング重視' },
+];
+
+// ═══════════════════════════════════════════════════════════════
+//  CONSTANTS & STATE
+// ═══════════════════════════════════════════════════════════════
+const MONTHS  = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+const DAYS    = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const TYPE_COLORS = { hyrox:'#E30613', run:'#16A34A', strength:'#2563EB', endurance:'#D97706', race:'#E30613' };
+const LEGEND_ITEMS = [
+  { type:'hyrox',     label:'HYROX' },
+  { type:'run',       label:'RUN' },
+  { type:'strength',  label:'STRENGTH' },
+  { type:'endurance', label:'ENDURANCE' },
+  { type:'race',      label:'RACE' },
+];
+
+let view    = 'month';
+let current = new Date();
+let events  = [];
+
+// ═══════════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════════
+function ymd(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function parseYMD(s) {
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+
+function typeClass(t) {
+  const map = {
+    HYROX:'hyrox', WOD:'hyrox',
+    RUN:'run',
+    STRENGTH:'strength',
+    ENDURANCE:'endurance', SKIERG:'endurance', ROW:'endurance', RECOVERY:'endurance',
+    RACE:'race'
+  };
+  return map[(t||'').toUpperCase()] || 'hyrox';
+}
+
+function typeColor(t) { return TYPE_COLORS[typeClass(t)] || TYPE_COLORS.wod; }
+
+function timeToMinutes(t) {
+  if (!t) return null;
+  const [h,m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function forDate(dateStr) {
+  return events.filter(e => e.date === dateStr);
+}
+
+function weekStart(d) {
+  const dt = new Date(d);
+  dt.setDate(dt.getDate() - dt.getDay());
+  dt.setHours(0,0,0,0);
+  return dt;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DATA LOADING
+// ═══════════════════════════════════════════════════════════════
+function parseCSV(text) {
+  const rows = [];
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return rows;
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    const cols = [];
+    let cur = '', inQ = false;
+    for (const ch of line) {
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+      else { cur += ch; }
+    }
+    cols.push(cur.trim());
+    if (!cols[0]) continue;
+    rows.push({
+      date:  cols[0] || '',
+      start: cols[1] || '',
+      end:   cols[2] || '',
+      theme: cols[3] || '(無題)',
+      type:  cols[4] || 'WOD',
+      notes: cols[5] || '',
+    });
+  }
+  return rows;
+}
+
+async function loadEvents() {
+  if (!CONFIG.SHEET_URL) {
+    events = SAMPLE;
+    return;
+  }
+  try {
+    const res = await fetch(CONFIG.SHEET_URL);
+    if (!res.ok) throw new Error('fetch failed');
+    events = parseCSV(await res.text());
+  } catch (e) {
+    console.warn('[HYROX Calendar] Google Sheetsの読み込みに失敗。サンプルデータを使用します。', e);
+    events = SAMPLE;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER — LEGEND
+// ═══════════════════════════════════════════════════════════════
+function renderLegend() {
+  return `<div class="legend">${
+    LEGEND_ITEMS.map(li =>
+      `<div class="legend-item">
+        <div class="legend-dot" style="background:${TYPE_COLORS[li.type]}"></div>
+        <span class="legend-label">${li.label}</span>
+      </div>`
+    ).join('')
+  }</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER — MONTHLY
+// ═══════════════════════════════════════════════════════════════
+function renderMonthly() {
+  const y = current.getFullYear();
+  const m = current.getMonth();
+  document.getElementById('periodLabel').textContent = `${MONTHS[m]} ${y}`;
+
+  const firstDay = new Date(y, m, 1);
+  const lastDay  = new Date(y, m+1, 0);
+  const today    = ymd(new Date());
+  const pad      = firstDay.getDay(); // Sun=0
+
+  let cells = '';
+
+  // leading empty cells (prev month)
+  for (let i = 0; i < pad; i++) {
+    const d = new Date(y, m, 1 - (pad - i));
+    cells += dayCell(d, true, today);
+  }
+  // current month
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    cells += dayCell(new Date(y, m, d), false, today);
+  }
+  // trailing empty cells
+  const total = pad + lastDay.getDate();
+  const trail = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let i = 1; i <= trail; i++) {
+    cells += dayCell(new Date(y, m+1, i), true, today);
+  }
+
+  const weekdayRow = DAYS.map(d => `<div class="weekday-label">${d}</div>`).join('');
+
+  return `
+    ${renderLegend()}
+    <div class="monthly-view">
+      <div class="weekday-row">${weekdayRow}</div>
+      <div class="calendar-grid">${cells}</div>
+    </div>
+  `;
+}
+
+function dayCell(date, otherMonth, today) {
+  const ds = ymd(date);
+  const evts = forDate(ds);
+  const isToday = ds === today;
+
+  let cls = 'day-cell';
+  if (otherMonth) cls += ' other-month';
+  if (isToday) cls += ' is-today';
+
+  const numHtml = isToday
+    ? `<div class="today-dot">${date.getDate()}</div>`
+    : `${date.getDate()}`;
+
+  const chips = evts.slice(0, 3).map((e, i) =>
+    `<span class="event-chip t-${typeClass(e.type)}"
+      onclick="openDetail(event,'${ds}',${events.indexOf(e)})"
+    >${IS_PRIVATE && e.start ? e.start + ' ' : ''}${e.theme}</span>`
+  ).join('');
+
+  const more = evts.length > 3
+    ? `<span class="more-count">+${evts.length - 3} more</span>` : '';
+
+  return `<div class="${cls}" onclick="">
+    <div class="day-num">${numHtml}</div>
+    ${chips}${more}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER — WEEKLY
+// ═══════════════════════════════════════════════════════════════
+function renderWeekly() {
+  const ws  = weekStart(current);
+  const we  = new Date(ws); we.setDate(we.getDate() + 6);
+  const today = ymd(new Date());
+
+  const sLabel = `${ws.getDate()} ${MONTHS[ws.getMonth()].slice(0,3)}`;
+  const eLabel = `${we.getDate()} ${MONTHS[we.getMonth()].slice(0,3)} ${we.getFullYear()}`;
+  document.getElementById('periodLabel').textContent = `${sLabel} – ${eLabel}`;
+
+  const START = CONFIG.START_HOUR;
+  const END   = CONFIG.END_HOUR;
+  const HOURS = END - START;
+  const SLOT_H = 60; // px per hour
+
+  // Build day columns
+  let dayCols = '';
+  for (let di = 0; di < 7; di++) {
+    const d = new Date(ws); d.setDate(d.getDate() + di);
+    const ds = ymd(d);
+    const isToday = ds === today;
+    const dayEvts = forDate(ds);
+
+    // Separate all-day from timed
+    const allDay = dayEvts.filter(e => !e.start);
+    const timed  = dayEvts.filter(e =>  e.start);
+
+    // All-day bars (rendered at top of slot area)
+    const allDayHtml = allDay.map(e => {
+      const idx = events.indexOf(e);
+      return `<div class="event-chip t-${typeClass(e.type)} all-day-bar"
+        style="border-left-color:${typeColor(e.type)};cursor:pointer;display:block;margin:2px 3px;"
+        onclick="openDetail(event,'${ds}',${idx})"
+      >${e.theme}</div>`;
+    }).join('');
+
+    // Time slots
+    let slots = allDayHtml;
+    slots += `<div style="position:relative;height:${HOURS * SLOT_H}px;">`;
+
+    // Hour grid lines
+    for (let h = 0; h < HOURS; h++) {
+      slots += `<div style="position:absolute;top:${h*SLOT_H}px;left:0;right:0;height:${SLOT_H}px;border-bottom:1px solid var(--border);"></div>`;
+    }
+
+    // Half-hour lines
+    for (let h = 0; h < HOURS; h++) {
+      slots += `<div style="position:absolute;top:${h*SLOT_H + SLOT_H/2}px;left:0;right:0;border-bottom:1px dashed var(--border);opacity:0.4;"></div>`;
+    }
+
+    // Event blocks
+    timed.forEach(e => {
+      const startMin = timeToMinutes(e.start);
+      if (startMin === null) return;
+      const endMin = e.end ? timeToMinutes(e.end) : startMin + 60;
+
+      const topPx    = (startMin - START * 60) / 60 * SLOT_H;
+      const heightPx = Math.max(22, (endMin - startMin) / 60 * SLOT_H - 2);
+
+      if (topPx < 0 || topPx > HOURS * SLOT_H) return; // out of range
+
+      const idx = events.indexOf(e);
+      const color = typeColor(e.type);
+      slots += `<div class="wk-event t-${typeClass(e.type)}"
+        style="top:${topPx}px;height:${heightPx}px;border-left-color:${color};"
+        onclick="openDetail(event,'${ds}',${idx})"
+      >
+        <div class="wk-event-time">${e.start}${e.end ? ' – '+e.end : ''}</div>
+        <div class="wk-event-theme">${e.theme}</div>
+      </div>`;
+    });
+
+    slots += `</div>`;
+
+    dayCols += `<div class="day-col${isToday ? ' wk-today' : ''}">
+      <div class="day-col-header">
+        <div class="wk-day-name">${DAYS[d.getDay()]}</div>
+        <div class="wk-day-num">${d.getDate()}</div>
+      </div>
+      <div class="day-slots">${slots}</div>
+    </div>`;
+  }
+
+  // Time column
+  let timeCol = `<div class="time-col">
+    <div class="time-col-header"></div>`;
+  for (let h = START; h < END; h++) {
+    timeCol += `<div class="time-label">${String(h).padStart(2,'0')}:00</div>`;
+  }
+  timeCol += `</div>`;
+
+  return `
+    ${renderLegend()}
+    <div class="weekly-view">
+      <div class="week-wrapper">
+        ${timeCol}
+        <div class="days-wrap">${dayCols}</div>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DETAIL PANEL
+// ═══════════════════════════════════════════════════════════════
+function openDetail(ev, dateStr, idx) {
+  ev.stopPropagation();
+  const e = events[idx];
+  if (!e) return;
+
+  const d = parseYMD(dateStr);
+  const dateLabel = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${DAYS[d.getDay()]}）`;
+  const typeLabel = typeClass(e.type).toUpperCase();
+  const timeLabel = IS_PRIVATE
+    ? (e.start ? `${e.start}${e.end ? '  →  ' + e.end : ''}  |  ${typeLabel}` : `ALL DAY  |  ${typeLabel}`)
+    : typeLabel;
+
+  document.getElementById('detailBar').style.background  = typeColor(e.type);
+  document.getElementById('detailDateStr').textContent   = dateLabel;
+  document.getElementById('detailTheme').textContent     = e.theme;
+  document.getElementById('detailTime').textContent      = timeLabel;
+  document.getElementById('detailNotes').textContent     = e.notes || '—';
+
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  NAVIGATION & RENDER
+// ═══════════════════════════════════════════════════════════════
+function navigate(dir) {
+  // 公開モードは常に月単位
+  if (!IS_PRIVATE || view === 'month') {
+    current.setMonth(current.getMonth() + dir);
+  } else {
+    current.setDate(current.getDate() + dir * 7);
+  }
+  render();
+}
+
+function goToday() {
+  current = new Date();
+  render();
+}
+
+function setView(v) {
+  if (!IS_PRIVATE) return; // 公開モードは切り替え不可
+  view = v;
+  document.getElementById('btnMonth').classList.toggle('active', v === 'month');
+  document.getElementById('btnWeek').classList.toggle('active',  v === 'week');
+  render();
+}
+
+function render() {
+  // 公開モードは月表示のみ
+  const html = (!IS_PRIVATE || view === 'month') ? renderMonthly() : renderWeekly();
+  const dataSource = CONFIG.SHEET_URL ? 'Connected' : 'SAMPLE DATA';
+  // 公開モードではステータスバーを非表示
+  const statusHtml = IS_PRIVATE ? `
+    <div class="status-bar" style="margin-top:16px;">
+      <span class="status-left">HYROX TRAINING CALENDAR — ${CONFIG.NAME}</span>
+      <span class="status-right">DATA: ${dataSource} · ${events.length} EVENTS</span>
+    </div>` : '';
+  document.getElementById('main').innerHTML = html + statusHtml;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('prevBtn').addEventListener('click',  () => navigate(-1));
+document.getElementById('nextBtn').addEventListener('click',  () => navigate(1));
+document.getElementById('todayBtn').addEventListener('click', goToday);
+document.getElementById('btnMonth').addEventListener('click', () => setView('month'));
+document.getElementById('btnWeek').addEventListener('click',  () => setView('week'));
+document.getElementById('closeBtn').addEventListener('click', closeDetail);
+document.getElementById('overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeDetail();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeDetail();
+});
+
+// 公開モード: 週間切替ボタンを非表示
+if (!IS_PRIVATE) {
+  document.querySelector('.view-toggle').style.display = 'none';
+}
+
+loadEvents().then(render);
+
+</script>
+</body>
+</html>
