@@ -357,7 +357,7 @@ textarea {
   font-weight: 500;
   color: var(--muted);
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  line-height: 1.8;
 }
 
 .entries-loading {
@@ -455,7 +455,7 @@ textarea {
   white-space: pre;
   overflow-x: auto;
   margin-bottom: 6px;
-  max-height: 200px;
+  max-height: 240px;
   overflow-y: auto;
 }
 
@@ -504,61 +504,121 @@ textarea {
   cursor: pointer;
   flex-shrink: 0;
 }
+
+.setup-reset-link {
+  display: block;
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-align: right;
+}
+.setup-reset-link:hover { color: var(--sub); }
   </style>
 </head>
 <body>
 
-<!-- SETUP MODAL (shown when Apps Script URL is not configured) -->
+<!--
+  ⚠️ このページには認証機能はありません。
+  URLを知っていれば誰でもアクセスできます。
+  センシティブなデータを扱う場合は、サーバーサイドの認証を検討してください。
+-->
+
+<!-- SETUP MODAL -->
 <div class="setup-overlay" id="setupOverlay" style="display:none">
   <div class="setup-panel">
     <div class="setup-title">初回セットアップ</div>
-    <div class="setup-sub">データの書き込み・削除のために Google Apps Script を一度だけ設定してください。5分で完了します。</div>
+    <div class="setup-sub">データの追加・削除に Google Apps Script が必要です。一度だけ設定してください（約5分）。</div>
 
-    <div class="setup-step">STEP 1 — Google Apps Scriptを開く</div>
-    <div class="setup-desc">Google スプレッドシートを開き、「<strong>拡張機能</strong>」→「<strong>Apps Script</strong>」をクリック</div>
+    <div class="setup-step">STEP 1 — Google スプレッドシートを開く</div>
+    <div class="setup-desc">トレーニングデータを保存しているスプレッドシートを開き、「<strong>拡張機能</strong>」→「<strong>Apps Script</strong>」をクリック</div>
 
-    <div class="setup-step">STEP 2 — コードを貼り付ける</div>
-    <div class="setup-desc">既存のコードをすべて削除し、以下をコピー＆ペーストして保存（Ctrl+S）</div>
+    <div class="setup-step">STEP 2 — 以下のコードをすべて貼り付けて保存</div>
+    <div class="setup-desc">既存のコードを全削除し、以下をコピー＆ペーストして <strong>Ctrl+S</strong> で保存</div>
 
     <div class="code-block" id="scriptCode">function doGet(e) {
-  const action  = e.parameter.action;
-  const ss      = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet   = ss.getSheetByName('Sheet1') || ss.getSheets()[0];
-  let result    = { success: false, action: action };
+  const action = e.parameter.action;
+  const ss     = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet  = ss.getSheetByName('Sheet1') || ss.getSheets()[0];
+  const result = { success: false, action: action };
 
-  if (action === 'add') {
+  function fmtDate(v) {
+    if (!v) return '';
+    if (typeof v === 'object') return Utilities.formatDate(v, 'Asia/Tokyo', 'yyyy-MM-dd');
+    return String(v).trim();
+  }
+  function fmtTime(v) {
+    if (!v) return '';
+    if (typeof v === 'object') return Utilities.formatDate(v, 'Asia/Tokyo', 'HH:mm');
+    return String(v).trim();
+  }
+  function genId() {
+    return 'hx_' + new Date().getTime() + '_' + Math.random().toString(36).slice(2, 6);
+  }
+
+  // ヘッダー自動初期化（列順: date,start,end,theme,type,notes,id,createdAt）
+  const h = sheet.getRange(1,1,1,8).getValues()[0];
+  if (!h[0] || String(h[0]).toLowerCase() !== 'date') {
+    sheet.getRange(1,1,1,8).setValues([
+      ['date','start','end','theme','type','notes','id','createdAt']
+    ]);
+  }
+
+  if (action === 'list') {
+    const rows = sheet.getDataRange().getValues();
+    const entries = [];
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      const d = fmtDate(r[0]);
+      if (!d) continue;
+      let id = String(r[6] || '').trim();
+      if (!id) { id = genId(); sheet.getRange(i+1, 7).setValue(id); }
+      entries.push({
+        id, date: d,
+        start: fmtTime(r[1]), end: fmtTime(r[2]),
+        theme: String(r[3]||''), type: String(r[4]||'HYROX'),
+        notes: String(r[5]||''), createdAt: String(r[7]||'')
+      });
+    }
+    result.success = true;
+    result.entries = entries;
+  }
+
+  else if (action === 'add') {
+    const id  = genId();
+    const now = new Date().toISOString();
     sheet.appendRow([
       e.parameter.date  || '',
       e.parameter.start || '',
       e.parameter.end   || '',
       e.parameter.theme || '',
-      e.parameter.type  || '',
-      e.parameter.notes || ''
+      e.parameter.type  || 'HYROX',
+      e.parameter.notes || '',
+      id, now
     ]);
     result.success = true;
+    result.id = id;
   }
 
   else if (action === 'delete') {
-    const d = e.parameter.date;
-    const t = e.parameter.theme;
-    const rows = sheet.getDataRange().getValues();
+    const tid    = e.parameter.id    || '';
+    const tdate  = e.parameter.date  || '';
+    const ttheme = e.parameter.theme || '';
+    const rows   = sheet.getDataRange().getValues();
     for (let i = rows.length - 1; i >= 1; i--) {
-      if (String(rows[i][0]).trim() === d && rows[i][3] === t) {
-        sheet.deleteRow(i + 1);
-        result.success = true;
-        break;
-      }
+      const rowId    = String(rows[i][6]||'').trim();
+      const rowDate  = fmtDate(rows[i][0]);
+      const rowTheme = String(rows[i][3]||'').trim();
+      const hit = (tid && rowId === tid) ||
+                  (!tid && rowDate === tdate && rowTheme === ttheme);
+      if (hit) { sheet.deleteRow(i+1); result.success = true; break; }
     }
   }
 
-  const cb = e.parameter.callback;
-  const body = cb
-    ? cb + '(' + JSON.stringify(result) + ')'
-    : JSON.stringify(result);
-  const mime = cb
-    ? ContentService.MimeType.JAVASCRIPT
-    : ContentService.MimeType.JSON;
-
+  const cb   = e.parameter.callback;
+  const body = cb ? cb+'('+JSON.stringify(result)+')' : JSON.stringify(result);
+  const mime = cb ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON;
   return ContentService.createTextOutput(body).setMimeType(mime);
 }</div>
     <button class="copy-btn" onclick="copyScript()">コードをコピー</button>
@@ -568,13 +628,13 @@ textarea {
       1. 右上「<strong>デプロイ</strong>」→「<strong>新しいデプロイ</strong>」<br>
       2. 種類：「ウェブアプリ」を選択<br>
       3. アクセスできるユーザー：「<strong>全員</strong>」に設定<br>
-      4. 「<strong>デプロイ</strong>」→ 表示されたURLをコピー
+      4. 「デプロイ」→ 表示された URL をコピー
     </div>
 
-    <div class="setup-step">STEP 4 — URLをここに入力して保存</div>
+    <div class="setup-step">STEP 4 — URL を入力して保存</div>
     <div class="setup-input-wrap">
       <input class="setup-url-input" id="scriptUrlInput" type="text" placeholder="https://script.google.com/macros/s/..." />
-      <button class="setup-save-btn" onclick="saveScriptUrl()">SAVE</button>
+      <button class="setup-save-btn" onclick="saveScriptUrl()">保存</button>
     </div>
   </div>
 </div>
@@ -584,9 +644,9 @@ textarea {
   <div class="brand">
     <span class="brand-name">MUKAI</span>
     <span class="brand-sep">/</span>
-    <span class="brand-section">Training Admin</span>
+    <span class="brand-section">管理画面</span>
   </div>
-  <a class="back-link" href="index.html?private">← CALENDAR</a>
+  <a class="back-link" href="index.html">← カレンダーへ</a>
 </header>
 
 <!-- MAIN -->
@@ -595,30 +655,31 @@ textarea {
   <!-- FORM PANEL -->
   <div class="panel">
     <div class="panel-header">
-      <span class="panel-title">Add Entry</span>
+      <span class="panel-title">エントリ追加</span>
+      <button style="background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;letter-spacing:0.06em;text-transform:uppercase;" onclick="showSetup()">⚙ GAS設定</button>
     </div>
     <div class="panel-body">
 
       <div class="field">
-        <label class="field-label">Date</label>
+        <label class="field-label">日付</label>
         <input type="date" id="fDate" required>
       </div>
 
       <div class="field">
-        <label class="field-label">Time（任意）</label>
+        <label class="field-label">時間（任意）</label>
         <div class="field-row">
-          <input type="time" id="fStart" placeholder="Start">
-          <input type="time" id="fEnd" placeholder="End">
+          <input type="time" id="fStart" placeholder="開始">
+          <input type="time" id="fEnd" placeholder="終了">
         </div>
       </div>
 
       <div class="field">
-        <label class="field-label">Theme</label>
+        <label class="field-label">テーマ</label>
         <input type="text" id="fTheme" placeholder="Morning Run 10K" required>
       </div>
 
       <div class="field">
-        <label class="field-label">Type</label>
+        <label class="field-label">タイプ</label>
         <div class="type-selector" id="typeSelector">
           <button class="type-btn active" data-type="HYROX">HYROX</button>
           <button class="type-btn" data-type="RUN">RUN</button>
@@ -629,11 +690,11 @@ textarea {
       </div>
 
       <div class="field">
-        <label class="field-label">Notes（任意）</label>
+        <label class="field-label">メモ（任意）</label>
         <textarea id="fNotes" placeholder="メニュー・目標ペース等"></textarea>
       </div>
 
-      <button class="submit-btn" id="submitBtn" onclick="addEntry()">+ ADD TRAINING</button>
+      <button class="submit-btn" id="submitBtn" onclick="addEntry()">+ トレーニング追加</button>
 
     </div>
   </div>
@@ -641,14 +702,14 @@ textarea {
   <!-- ENTRIES PANEL -->
   <div class="entries-panel">
     <div class="entries-header">
-      <span class="panel-title">All Entries</span>
+      <span class="panel-title">全エントリ</span>
       <div style="display:flex;align-items:center;gap:8px;">
         <span class="entries-count" id="entriesCount">—</span>
-        <button class="refresh-btn" onclick="loadEntries()">↻ REFRESH</button>
+        <button class="refresh-btn" onclick="loadEntries()">↻ 更新</button>
       </div>
     </div>
     <div class="entries-list" id="entriesList">
-      <div class="entries-loading">Loading...</div>
+      <div class="entries-loading">読み込み中...</div>
     </div>
   </div>
 
@@ -659,21 +720,12 @@ textarea {
 
 <script>
 // ═══════════════════════════════════════════════════════════════
-//  CONFIG
+//  CONFIG & STATE
 // ═══════════════════════════════════════════════════════════════
-const CONFIG = {
-  SHEET_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vScoq3pUsD-UlF1LtD2fzbGYkKu99e5gem0zIA2aIZ2K9hwl8NP13fJ5rEz3CArlGc3diuSXDpxSMJi/pub?gid=0&single=true&output=csv',
-};
-
-// Apps Script URLはlocalStorageに保存
 let SCRIPT_URL = localStorage.getItem('hyrox_script_url') || '';
+let allEntries = [];
+let selectedType = 'HYROX';
 
-// ─── 非公開チェック ───────────────────────────────────────────
-if (!new URLSearchParams(window.location.search).has('private')) {
-  window.location.replace('index.html');
-}
-
-// ─── タイプカラー ─────────────────────────────────────────────
 const TYPE_COLORS = {
   HYROX: '#E30613', RUN: '#16A34A', STRENGTH: '#2563EB',
   ENDURANCE: '#D97706', RACE: '#E30613'
@@ -683,15 +735,17 @@ const TYPE_COLORS = {
 //  SETUP
 // ═══════════════════════════════════════════════════════════════
 function checkSetup() {
-  if (!SCRIPT_URL) {
-    document.getElementById('setupOverlay').style.display = 'flex';
-  }
+  if (!SCRIPT_URL) showSetup();
+}
+
+function showSetup() {
+  document.getElementById('setupOverlay').style.display = 'flex';
 }
 
 function saveScriptUrl() {
   const url = document.getElementById('scriptUrlInput').value.trim();
   if (!url.startsWith('https://script.google.com/')) {
-    showToast('URLが正しくありません', true);
+    showToast('URLが正しくありません（script.google.com で始まる必要があります）', true);
     return;
   }
   SCRIPT_URL = url;
@@ -703,14 +757,14 @@ function saveScriptUrl() {
 
 function copyScript() {
   const code = document.getElementById('scriptCode').textContent;
-  navigator.clipboard.writeText(code).then(() => showToast('コードをコピーしました'));
+  navigator.clipboard.writeText(code)
+    .then(() => showToast('コードをコピーしました'))
+    .catch(() => showToast('コピーに失敗しました（手動でコピーしてください）', true));
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  TYPE SELECTOR
 // ═══════════════════════════════════════════════════════════════
-let selectedType = 'HYROX';
-
 document.getElementById('typeSelector').addEventListener('click', (e) => {
   const btn = e.target.closest('.type-btn');
   if (!btn) return;
@@ -720,80 +774,124 @@ document.getElementById('typeSelector').addEventListener('click', (e) => {
 });
 
 // ═══════════════════════════════════════════════════════════════
-//  CSV PARSING
+//  JSONP — GASへのリクエスト（CORS回避）
 // ═══════════════════════════════════════════════════════════════
-function parseCSV(text) {
-  const rows = [];
-  const lines = text.trim().split('\n');
-  if (lines.length < 2) return rows;
-  for (let i = 1; i < lines.length; i++) {
-    const cols = [];
-    let cur = '', inQ = false;
-    for (const ch of lines[i]) {
-      if (ch === '"') { inQ = !inQ; }
-      else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
-      else { cur += ch; }
-    }
-    cols.push(cur.trim());
-    if (!cols[0]) continue;
-    rows.push({ date: cols[0], start: cols[1]||'', end: cols[2]||'', theme: cols[3]||'', type: cols[4]||'HYROX', notes: cols[5]||'' });
-  }
-  return rows;
+function callScript(params) {
+  return new Promise((resolve, reject) => {
+    if (!SCRIPT_URL) { reject(new Error('GAS URLが未設定です')); return; }
+
+    const cbName = 'hyrox_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
+    const url = SCRIPT_URL + '?' + new URLSearchParams({ ...params, callback: cbName, _t: Date.now() });
+
+    const timer = setTimeout(() => {
+      delete window[cbName];
+      if (script.parentNode) document.head.removeChild(script);
+      reject(new Error('タイムアウト（10秒）'));
+    }, 10000);
+
+    window[cbName] = (data) => {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (script.parentNode) document.head.removeChild(script);
+      resolve(data);
+    };
+
+    const script = document.createElement('script');
+    script.src = url;
+    script.onerror = () => {
+      clearTimeout(timer);
+      delete window[cbName];
+      reject(new Error('通信エラー（GASのURLと公開設定を確認してください）'));
+    };
+    document.head.appendChild(script);
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  LOAD ENTRIES
 // ═══════════════════════════════════════════════════════════════
-let allEntries = [];
-
 async function loadEntries() {
-  const list = document.getElementById('entriesList');
-  list.innerHTML = '<div class="entries-loading">Loading...</div>';
-
+  if (!SCRIPT_URL) {
+    setEntriesState('setup');
+    return;
+  }
+  setEntriesState('loading');
   try {
     const result = await callScript({ action: 'list' });
     if (result.success) {
-      allEntries = result.entries;
+      allEntries = result.entries || [];
       renderEntries();
     } else {
-      list.innerHTML = '<div class="entries-empty">データを読み込めませんでした</div>';
+      setEntriesState('error', 'データ取得に失敗しました\nGASのコードとデプロイ設定を確認してください');
     }
-  } catch (e) {
-    list.innerHTML = '<div class="entries-empty">データを読み込めませんでした</div>';
+  } catch (err) {
+    setEntriesState('error', err.message);
   }
 }
 
+function setEntriesState(state, msg) {
+  const list  = document.getElementById('entriesList');
+  const count = document.getElementById('entriesCount');
+  const messages = {
+    setup:   '⚙ Apps Script URLを設定してください',
+    loading: '読み込み中...',
+  };
+  if (state === 'loading') {
+    list.innerHTML = `<div class="entries-loading">${messages.loading}</div>`;
+    count.textContent = '—';
+  } else if (state === 'setup') {
+    list.innerHTML = `<div class="entries-empty">${messages.setup}</div>`;
+    count.textContent = '—';
+  } else if (state === 'error') {
+    list.innerHTML = `<div class="entries-empty" style="color:var(--red)">${msg || '通信エラー'}</div>`;
+    count.textContent = '—';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER ENTRIES
+// ═══════════════════════════════════════════════════════════════
 function renderEntries() {
-  const list = document.getElementById('entriesList');
+  const list  = document.getElementById('entriesList');
   const count = document.getElementById('entriesCount');
 
   if (allEntries.length === 0) {
-    list.innerHTML = '<div class="entries-empty">エントリーなし</div>';
-    count.textContent = '0 entries';
+    list.innerHTML = '<div class="entries-empty">エントリなし</div>';
+    count.textContent = '0件';
     return;
   }
 
-  count.textContent = allEntries.length + ' entries';
+  count.textContent = allEntries.length + '件';
 
-  // Sort by date descending
   const sorted = [...allEntries].sort((a, b) => b.date.localeCompare(a.date));
 
   list.innerHTML = sorted.map(e => {
-    const color = TYPE_COLORS[e.type.toUpperCase()] || TYPE_COLORS.HYROX;
-    const timeStr = e.start ? (e.end ? `${e.start}–${e.end}` : e.start) : '—';
-    const dateFormatted = formatDate(e.date);
-    const escapedDate  = e.date.replace(/'/g, "\\'");
-    const escapedTheme = e.theme.replace(/'/g, "\\'");
-
-    return `<div class="entry-row">
+    const color     = TYPE_COLORS[e.type.toUpperCase()] || TYPE_COLORS.HYROX;
+    const timeStr   = e.start ? (e.end ? `${e.start}–${e.end}` : e.start) : '—';
+    const dateFmt   = formatDate(e.date);
+    const safeId    = CSS.escape ? CSS.escape(e.id) : e.id;
+    // onclick: エントリのIDをdata属性経由で渡す（インジェクション対策）
+    return `<div class="entry-row" data-id="${escHtml(e.id)}" data-date="${escHtml(e.date)}" data-theme="${escHtml(e.theme)}">
       <div class="entry-dot" style="background:${color}"></div>
-      <div class="entry-date">${dateFormatted}</div>
-      <div class="entry-time">${timeStr}</div>
-      <div class="entry-theme" title="${e.theme}">${e.theme}</div>
-      <div class="entry-type">${e.type}</div>
-      <button class="entry-delete" onclick="deleteEntry('${escapedDate}','${escapedTheme}')" title="削除">✕</button>
+      <div class="entry-date">${dateFmt}</div>
+      <div class="entry-time">${escHtml(timeStr)}</div>
+      <div class="entry-theme" title="${escHtml(e.theme)}">${escHtml(e.theme)}</div>
+      <div class="entry-type">${escHtml(e.type)}</div>
+      <button class="entry-delete" onclick="deleteEntryFromRow(this)" title="削除">✕</button>
     </div>`;
   }).join('');
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function deleteEntryFromRow(btn) {
+  const row   = btn.closest('.entry-row');
+  const id    = row.dataset.id;
+  const date  = row.dataset.date;
+  const theme = row.dataset.theme;
+  deleteEntry(id, date, theme);
 }
 
 function formatDate(str) {
@@ -805,41 +903,6 @@ function formatDate(str) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  JSONP CALL (CORS-free)
-// ═══════════════════════════════════════════════════════════════
-function callScript(params) {
-  return new Promise((resolve, reject) => {
-    if (!SCRIPT_URL) { reject(new Error('No script URL')); return; }
-
-    const cbName = 'hyrox_cb_' + Date.now();
-    const url = SCRIPT_URL + '?' + new URLSearchParams({ ...params, callback: cbName, _t: Date.now() });
-
-    window[cbName] = (data) => {
-      delete window[cbName];
-      if (script.parentNode) document.head.removeChild(script);
-      resolve(data);
-    };
-
-    const script = document.createElement('script');
-    script.src = url;
-    script.onerror = () => {
-      delete window[cbName];
-      reject(new Error('Script error'));
-    };
-
-    // タイムアウト 8秒
-    const timer = setTimeout(() => {
-      delete window[cbName];
-      if (script.parentNode) document.head.removeChild(script);
-      reject(new Error('Timeout'));
-    }, 8000);
-
-    script.onload = () => clearTimeout(timer);
-    document.head.appendChild(script);
-  });
-}
-
-// ═══════════════════════════════════════════════════════════════
 //  ADD ENTRY
 // ═══════════════════════════════════════════════════════════════
 async function addEntry() {
@@ -847,73 +910,69 @@ async function addEntry() {
   const theme = document.getElementById('fTheme').value.trim();
 
   if (!date || !theme) {
-    showToast('Date と Theme は必須です', true);
+    showToast('日付とテーマは必須です', true);
     return;
   }
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
-  btn.textContent = 'Saving...';
+  btn.textContent = '保存中...';
+
+  const start = document.getElementById('fStart').value;
+  const end   = document.getElementById('fEnd').value;
+  const notes = document.getElementById('fNotes').value.trim();
 
   try {
-    const result = await callScript({
-      action: 'add',
-      date,
-      start: document.getElementById('fStart').value,
-      end:   document.getElementById('fEnd').value,
-      theme,
-      type:  selectedType,
-      notes: document.getElementById('fNotes').value.trim(),
-    });
+    const result = await callScript({ action: 'add', date, start, end, theme, type: selectedType, notes });
 
     if (result.success) {
-      // 楽観的UI更新：即座にリストに追加
-      allEntries.unshift({
-        date,
-        start: document.getElementById('fStart').value,
-        end:   document.getElementById('fEnd').value,
-        theme,
-        type:  selectedType,
-        notes: document.getElementById('fNotes').value.trim(),
-      });
+      // 楽観的UI更新：GASが返したIDを使用
+      const newEntry = {
+        id:        result.id || ('local_' + Date.now()),
+        date, start, end, theme,
+        type:      selectedType,
+        notes,
+        createdAt: new Date().toISOString()
+      };
+      allEntries.unshift(newEntry);
       renderEntries();
       showToast('追加しました ✓');
       resetForm();
     } else {
       showToast('保存に失敗しました', true);
     }
-  } catch (e) {
-    showToast('エラー: ' + e.message, true);
+  } catch (err) {
+    showToast('エラー: ' + err.message, true);
   } finally {
     btn.disabled = false;
-    btn.textContent = '+ ADD TRAINING';
+    btn.textContent = '+ トレーニング追加';
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  DELETE ENTRY
 // ═══════════════════════════════════════════════════════════════
-async function deleteEntry(date, theme) {
+async function deleteEntry(id, date, theme) {
   if (!confirm(`「${theme}」を削除しますか？`)) return;
 
-  // 楽観的UI更新：即座にリストから削除
+  // 楽観的UI更新：即座にリストから除去
   const prev = allEntries.slice();
-  allEntries = allEntries.filter(e => !(e.date === date && e.theme === theme));
+  allEntries = allEntries.filter(e => e.id !== id);
   renderEntries();
   showToast('削除しました');
 
   try {
-    const result = await callScript({ action: 'delete', date, theme });
+    // IDベース削除（IDがなければ日付+テーマでフォールバック）
+    const result = await callScript({ action: 'delete', id, date, theme });
     if (!result.success) {
-      // GAS側で失敗した場合は元に戻す
       allEntries = prev;
       renderEntries();
-      showToast('削除に失敗しました', true);
+      showToast('削除に失敗しました（シートを確認してください）', true);
     }
-  } catch (e) {
+  } catch (err) {
     allEntries = prev;
     renderEntries();
-    showToast('エラー: ' + e.message, true);
+    showToast('エラー: ' + err.message, true);
   }
 }
 
@@ -921,12 +980,11 @@ async function deleteEntry(date, theme) {
 //  UTILS
 // ═══════════════════════════════════════════════════════════════
 function resetForm() {
-  document.getElementById('fDate').valueAsDate  = new Date();
+  document.getElementById('fDate').valueAsDate = new Date();
   document.getElementById('fStart').value = '';
   document.getElementById('fEnd').value   = '';
   document.getElementById('fTheme').value = '';
   document.getElementById('fNotes').value = '';
-  // Reset type to HYROX
   document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.type-btn[data-type="HYROX"]').classList.add('active');
   selectedType = 'HYROX';
@@ -940,20 +998,23 @@ function showToast(msg, isError = false) {
   void t.offsetWidth;
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════════
 document.getElementById('fDate').valueAsDate = new Date();
-checkSetup();
-loadEntries();
-
-// Enter キーで送信
 document.getElementById('fTheme').addEventListener('keydown', e => {
   if (e.key === 'Enter') addEntry();
 });
+
+checkSetup();
+if (SCRIPT_URL) {
+  loadEntries();
+} else {
+  setEntriesState('setup');
+}
 </script>
 </body>
 </html>
