@@ -334,31 +334,49 @@ body {
   padding: 2px 6px;
 }
 
-/* ─── MOBILE: monthly chips → colored dots only ──────────── */
+/* ─── MOBILE: monthly chips → tappable colored dots ─────── */
 @media (max-width: 640px) {
   .event-chip {
     font-size: 0 !important;
-    padding: 0 !important;
+    /* 見た目の丸: 16px */
+    width: 16px !important;
+    height: 16px !important;
+    border-radius: 50% !important;
     border-left: none !important;
-    background: transparent !important;
-    width: 8px;
-    height: 8px;
+    /* タッチターゲットを28pxに拡張 */
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 6px !important;
+    box-sizing: content-box !important;
+    margin: 1px 1px !important;
+    flex-shrink: 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(255,255,255,0.15);
+  }
+  /* 実際の丸はbox-shadowで描画してタッチ領域を確保 */
+  .event-chip::after {
+    content: '';
+    display: block;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
-    display: inline-block;
-    margin: 1px 2px 1px 0;
+    background: currentColor;
     flex-shrink: 0;
   }
-  .event-chip.t-hyrox     { background: var(--red) !important; }
-  .event-chip.t-run       { background: var(--green) !important; }
-  .event-chip.t-strength  { background: var(--blue) !important; }
-  .event-chip.t-endurance { background: var(--orange) !important; }
-  .event-chip.t-race      { background: var(--red) !important; }
+  .event-chip.t-hyrox     { background: transparent !important; color: var(--red); }
+  .event-chip.t-run       { background: transparent !important; color: var(--green); }
+  .event-chip.t-strength  { background: transparent !important; color: var(--blue); }
+  .event-chip.t-endurance { background: transparent !important; color: var(--orange); }
+  .event-chip.t-race      { background: transparent !important; color: var(--red); }
+
   .day-num { font-size: 11px; }
-  .calendar-grid { grid-auto-rows: minmax(56px, 1fr); }
-  .day-cell { padding: 6px 5px; }
-  /* dots container needs flex */
-  .day-cell { display: flex; flex-direction: column; }
-  .dots-row { display: flex; flex-wrap: wrap; align-items: center; }
+  /* セル高を広げてドットが窮屈にならないように */
+  .calendar-grid { grid-auto-rows: minmax(70px, 1fr); }
+  .day-cell { padding: 6px 4px; display: flex; flex-direction: column; }
+  .dots-row { display: flex; flex-wrap: wrap; }
+  /* more-count も見やすく */
+  .more-count { font-size: 9px; padding: 2px 4px; }
 }
 
 /* ─── WEEKLY VIEW ────────────────────────────────────────── */
