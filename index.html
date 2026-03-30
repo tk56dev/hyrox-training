@@ -750,10 +750,6 @@ body {
       <span class="period-label" id="periodLabel"></span>
       <button class="nav-btn" id="nextBtn">&#8594;</button>
     </div>
-    <div class="view-toggle">
-      <button class="view-btn active" id="btnMonth">MONTH</button>
-      <button class="view-btn" id="btnWeek">WEEK</button>
-    </div>
   </div>
 </header>
 
@@ -834,7 +830,7 @@ const LEGEND_ITEMS = [
   { type:'race',      label:'RACE' },
 ];
 
-let view       = 'month';
+const view     = 'month'; // 公開UIは月間表示固定
 let current    = new Date();
 let events     = [];
 let dataSource = 'SAMPLE';
@@ -1262,11 +1258,7 @@ function closeDetail() {
 //  NAVIGATION & RENDER
 // ═══════════════════════════════════════════════════════════════
 function navigate(dir) {
-  if (view === 'month') {
-    current.setMonth(current.getMonth() + dir);
-  } else {
-    current.setDate(current.getDate() + dir * 7);
-  }
+  current.setMonth(current.getMonth() + dir);
   render();
 }
 
@@ -1275,15 +1267,8 @@ function goToday() {
   render();
 }
 
-function setView(v) {
-  view = v;
-  document.getElementById('btnMonth').classList.toggle('active', v === 'month');
-  document.getElementById('btnWeek').classList.toggle('active',  v === 'week');
-  render();
-}
-
 function render() {
-  const html = (view === 'month') ? renderMonthly() : renderWeekly();
+  const html = renderMonthly();
   const sourceLabel = { GAS: 'LIVE · GAS', CSV: 'CSV', SAMPLE: 'SAMPLE DATA' }[dataSource] || dataSource;
   const statusHtml =
     '<div class="status-bar" style="margin-top:16px;">' +
@@ -1299,8 +1284,6 @@ function render() {
 document.getElementById('prevBtn').addEventListener('click',  function() { navigate(-1); });
 document.getElementById('nextBtn').addEventListener('click',  function() { navigate(1); });
 document.getElementById('todayBtn').addEventListener('click', goToday);
-document.getElementById('btnMonth').addEventListener('click', function() { setView('month'); });
-document.getElementById('btnWeek').addEventListener('click',  function() { setView('week'); });
 document.getElementById('closeBtn').addEventListener('click', closeDetail);
 document.getElementById('overlay').addEventListener('click', function(e) {
   if (e.target === this) closeDetail();
