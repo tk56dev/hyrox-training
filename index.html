@@ -334,48 +334,32 @@ body {
   padding: 2px 6px;
 }
 
-/* ─── MOBILE: monthly chips → tappable colored dots ─────── */
+/* ─── MOBILE: monthly chips → small colored dots ────────── */
 @media (max-width: 640px) {
   .event-chip {
     font-size: 0 !important;
-    /* 見た目の丸: 16px */
-    width: 16px !important;
-    height: 16px !important;
+    width: 8px !important;
+    height: 8px !important;
     border-radius: 50% !important;
     border-left: none !important;
-    /* タッチターゲットを28pxに拡張 */
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    padding: 6px !important;
-    box-sizing: content-box !important;
-    margin: 1px 1px !important;
+    display: inline-block !important;
+    padding: 0 !important;
+    margin: 2px !important;
+    box-sizing: border-box !important;
     flex-shrink: 0;
-    cursor: pointer;
-    -webkit-tap-highlight-color: rgba(255,255,255,0.15);
+    pointer-events: none; /* タップは日付セル全体で受ける */
   }
-  /* 実際の丸はbox-shadowで描画してタッチ領域を確保 */
-  .event-chip::after {
-    content: '';
-    display: block;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: currentColor;
-    flex-shrink: 0;
-  }
-  .event-chip.t-hyrox     { background: transparent !important; color: var(--red); }
-  .event-chip.t-run       { background: transparent !important; color: var(--green); }
-  .event-chip.t-strength  { background: transparent !important; color: var(--blue); }
-  .event-chip.t-endurance { background: transparent !important; color: var(--orange); }
-  .event-chip.t-race      { background: transparent !important; color: var(--red); }
+  .event-chip::after { display: none !important; }
+  .event-chip.t-hyrox     { background: var(--red) !important; }
+  .event-chip.t-run       { background: var(--green) !important; }
+  .event-chip.t-strength  { background: var(--blue) !important; }
+  .event-chip.t-endurance { background: var(--orange) !important; }
+  .event-chip.t-race      { background: var(--red) !important; }
 
   .day-num { font-size: 11px; }
-  /* セル高を広げてドットが窮屈にならないように */
   .calendar-grid { grid-auto-rows: minmax(70px, 1fr); }
-  .day-cell { padding: 6px 4px; display: flex; flex-direction: column; }
-  .dots-row { display: flex; flex-wrap: wrap; }
-  /* more-count ア見やすく */
+  .day-cell { padding: 6px 4px; display: flex; flex-direction: column; -webkit-tap-highlight-color: rgba(255,255,255,0.08); }
+  .dots-row { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 2px; }
   .more-count { font-size: 9px; padding: 2px 4px; }
 }
 
@@ -684,6 +668,57 @@ body {
   color: var(--border2);
 }
 
+/* ─── DELETE BUTTON ──────────────────────────────────────── */
+.detail-delete {
+  margin-top: 24px;
+  background: none;
+  border: 1px solid var(--red);
+  color: var(--red);
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: all 0.12s;
+  display: block;
+}
+.detail-delete:hover { background: var(--red); color: #fff; }
+
+/* ─── DAY EVENT LIST ─────────────────────────────────────── */
+.day-list-date {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+.day-list-item {
+  border-left: 3px solid var(--red);
+  background: rgba(255,255,255,0.04);
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.day-list-item:hover, .day-list-item:active { background: rgba(255,255,255,0.12); }
+.day-list-theme {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text);
+}
+.day-list-time {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
 /* ─── RESPONSIVE ─────────────────────────────────────────── */
 @media (max-width: 900px) {
   .header { padding: 0 20px; }
@@ -756,13 +791,22 @@ body {
 <div class="overlay" id="overlay">
   <div class="detail-panel">
     <button class="detail-close" id="closeBtn">✕</button>
-    <div class="detail-type-bar" id="detailBar"></div>
-    <div class="detail-date-str" id="detailDateStr"></div>
-    <div class="detail-theme" id="detailTheme"></div>
-    <div class="detail-time" id="detailTime"></div>
-    <hr class="detail-divider">
-    <div class="detail-notes-label">NOTES</div>
-    <div class="detail-notes" id="detailNotes"></div>
+    <!-- Single event view -->
+    <div id="detailSingle">
+      <div class="detail-type-bar" id="detailBar"></div>
+      <div class="detail-date-str" id="detailDateStr"></div>
+      <div class="detail-theme" id="detailTheme"></div>
+      <div class="detail-time" id="detailTime"></div>
+      <hr class="detail-divider">
+      <div class="detail-notes-label">NOTES</div>
+      <div class="detail-notes" id="detailNotes"></div>
+      <button class="detail-delete" id="deleteBtn" onclick="deleteCurrentEvent()" style="display:none">DELETE</button>
+    </div>
+    <!-- Day events list view (複数イベントがある日) -->
+    <div id="detailDayList" style="display:none">
+      <div class="day-list-date" id="listDateStr"></div>
+      <div id="listItems"></div>
+    </div>
   </div>
 </div>
 
@@ -992,9 +1036,10 @@ function dayCell(date, otherMonth, today) {
   const more = evts.length > 3
     ? `<span class="more-count">+${evts.length - 3} more</span>` : '';
 
-  return `<div class="${cls}" onclick="">
+  const cellClick = evts.length > 0 ? `onclick="openDayDetail(event,'${ds}')"` : '';
+  return `<div class="${cls}" ${cellClick}>
     <div class="day-num">${numHtml}</div>
-    ${chips}${more}
+    <div class="dots-row">${chips}${more}</div>
   </div>`;
 }
 
@@ -1105,13 +1150,16 @@ function renderWeekly() {
 // ═══════════════════════════════════════════════════════════════
 //  DETAIL PANEL
 // ═══════════════════════════════════════════════════════════════
+let _currentEventIdx = -1;
+
 function openDetail(ev, dateStr, idx) {
   ev.stopPropagation();
   const e = events[idx];
   if (!e) return;
+  _currentEventIdx = idx;
 
   const d = parseYMD(dateStr);
-  const dateLabel = `${d.getFullYear()}�t${d.getMonth()+1}月${d.getDate()}日（${DAYS[d.getDay()]}）`;
+  const dateLabel = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${DAYS[d.getDay()]}）`;
   const typeLabel = typeClass(e.type).toUpperCase();
   const timeLabel = IS_PRIVATE
     ? (e.start ? `${e.start}${e.end ? '  →  ' + e.end : ''}  |  ${typeLabel}` : `ALL DAY  |  ${typeLabel}`)
@@ -1122,8 +1170,48 @@ function openDetail(ev, dateStr, idx) {
   document.getElementById('detailTheme').textContent     = e.theme;
   document.getElementById('detailTime').textContent      = timeLabel;
   document.getElementById('detailNotes').textContent     = e.notes || '—';
+  document.getElementById('detailSingle').style.display  = '';
+  document.getElementById('detailDayList').style.display = 'none';
+  document.getElementById('deleteBtn').style.display     = IS_PRIVATE ? '' : 'none';
 
   document.getElementById('overlay').classList.add('open');
+}
+
+function openDayDetail(ev, dateStr) {
+  ev.stopPropagation();
+  const evts = forDate(dateStr);
+  if (evts.length === 0) return;
+  if (evts.length === 1) {
+    openDetail(ev, dateStr, events.indexOf(evts[0]));
+    return;
+  }
+  // 複数イベント → リスト表示
+  const d = parseYMD(dateStr);
+  const dateLabel = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${DAYS[d.getDay()]}）`;
+  document.getElementById('listDateStr').textContent = dateLabel;
+  document.getElementById('listItems').innerHTML = evts.map(e => {
+    const idx = events.indexOf(e);
+    const timeStr = e.start ? `${e.start}${e.end ? ' \u2013 ' + e.end : ''}` : 'ALL DAY';
+    return `<div class="day-list-item t-${typeClass(e.type)}"
+      onclick="openDetail(event,'${dateStr}',${idx})"
+      style="border-left-color:${typeColor(e.type)}">
+      <div class="day-list-theme">${e.theme}</div>
+      <div class="day-list-time">${timeStr}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('detailSingle').style.display  = 'none';
+  document.getElementById('detailDayList').style.display = '';
+  document.getElementById('overlay').classList.add('open');
+}
+
+function deleteCurrentEvent() {
+  if (_currentEventIdx < 0 || _currentEventIdx >= events.length) return;
+  const theme = events[_currentEventIdx].theme;
+  if (!confirm(`「${theme}」を削除しますか？\n（ページをリロードすると元に戻ります）`)) return;
+  events.splice(_currentEventIdx, 1);
+  _currentEventIdx = -1;
+  closeDetail();
+  render();
 }
 
 function closeDetail() {
@@ -1134,7 +1222,7 @@ function closeDetail() {
 //  NAVIGATION & RENDER
 // ═══════════════════════════════════════════════════════════════
 function navigate(dir) {
-  // 公開モードは常に月単$��
+  // 公開モードは常に月単位
   if (!IS_PRIVATE || view === 'month') {
     current.setMonth(current.getMonth() + dir);
   } else {
