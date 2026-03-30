@@ -20,6 +20,7 @@
   --text:    #FFF;
   --red:     #E30613;
   --red-dim: #7a030a;
+  --yellow:  #FACC15;
   --green:   #16A34A;
   --blue:    #2563EB;
   --orange:  #D97706;
@@ -219,7 +220,7 @@ textarea {
 
 .type-btn:hover { border-color: var(--border2); color: var(--text); }
 
-.type-btn.active[data-type="HYROX"]     { background: var(--red);    border-color: var(--red);    color: #fff; }
+.type-btn.active[data-type="HYROX"]     { background: var(--yellow); border-color: var(--yellow); color: #000; }
 .type-btn.active[data-type="RUN"]       { background: var(--green);  border-color: var(--green);  color: #fff; }
 .type-btn.active[data-type="STRENGTH"]  { background: var(--blue);   border-color: var(--blue);   color: #fff; }
 .type-btn.active[data-type="ENDURANCE"] { background: var(--orange); border-color: var(--orange); color: #fff; }
@@ -727,7 +728,7 @@ let allEntries = [];
 let selectedType = 'HYROX';
 
 const TYPE_COLORS = {
-  HYROX: '#E30613', RUN: '#16A34A', STRENGTH: '#2563EB',
+  HYROX: '#FACC15', RUN: '#16A34A', STRENGTH: '#2563EB',
   ENDURANCE: '#D97706', RACE: '#E30613'
 };
 
