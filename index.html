@@ -7,12 +7,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
 
-/* ═══════════════════════════════════════════════════════════════
-   SETUP: Google Sheetsと連携するには、このHTMLをテキストエディタで
-   開き、下部の CONFIG.SHEET_URL に公開CSVのURLを入力してください。
-   詳細は下部の「SETUP INSTRUCTIONS」コメントを参照。
-═══════════════════════════════════════════════════════════════ */
-
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
@@ -100,6 +94,25 @@ body {
   align-items: center;
   gap: 20px;
 }
+
+/* Admin link */
+.admin-link {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.12s;
+}
+.admin-link:hover { border-color: var(--border2); color: var(--sub); }
 
 /* View toggle */
 .view-toggle {
@@ -537,7 +550,6 @@ body {
   border-bottom: none;
   width: 100%;
   max-width: 600px;
-  /* Keep within viewport */
   max-height: 78vh;
   overflow-y: auto;
   padding: 32px 36px 44px;
@@ -644,10 +656,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0 0;
+  padding: 12px 0 0;
   border-top: 1px solid var(--border);
   margin-top: auto;
-  padding-top: 12px;
 }
 
 .status-left {
@@ -667,24 +678,6 @@ body {
   text-transform: uppercase;
   color: var(--border2);
 }
-
-/* ─── DELETE BUTTON ──────────────────────────────────────── */
-.detail-delete {
-  margin-top: 24px;
-  background: none;
-  border: 1px solid var(--red);
-  color: var(--red);
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 8px 20px;
-  cursor: pointer;
-  transition: all 0.12s;
-  display: block;
-}
-.detail-delete:hover { background: var(--red); color: #fff; }
 
 /* ─── DAY EVENT LIST ─────────────────────────────────────── */
 .day-list-date {
@@ -727,6 +720,7 @@ body {
   .period-label { min-width: 140px; font-size: 13px; }
   .detail-panel { padding: 28px 24px 40px; }
   .detail-theme { font-size: 28px; }
+  .admin-link { display: none; }
 }
 
 @media (max-width: 640px) {
@@ -739,28 +733,6 @@ body {
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════════
-  SETUP INSTRUCTIONS — Google Sheetsと連携する方法:
-
-  【手順 1】Google Spreadsheetを作成し、1行目にヘッダーを設定:
-    A列: date       → 例: 2026-03-29
-    B列: start      → 例: 06:00  （空欄でも可）
-    C列: end        → 例: 08:00  （空欄でも可）
-    D列: theme      → 例: Morning Run 10K（何でも自由記述）
-    E列: type       → HYROX / RUN / STRENGTH / ENDURANCE / RACE
-    F列: notes      → 詳細メモ（自由記述・空欄でも可）
-
-  【手順 2】「ファイル → 共有 → ウェブに公開」を選択
-    → シートを選択 → 「カンマ区切りの値（.csv）」→「公開」
-    → 表示されたURLをコピー
-
-  【手順 3】このファイルの末尾付近にある CONFIG.SHEET_URL に
-    コピーしたURLを貼り付けて保存
-    例: SHEET_URL: 'https://docs.google.com/spreadsheets/d/XXXX/pub?...'
-
-  【更新方法】Googleスプレッドシートに行を追記 → ページをリロード → 即反映！
-═══════════════════════════════════════════════════════════════ -->
-
 <!-- HEADER -->
 <header class="header">
   <div class="brand">
@@ -769,6 +741,7 @@ body {
     <span class="brand-status">HYROX Racer</span>
   </div>
   <div class="header-right">
+    <a class="admin-link" href="admin.html">ADMIN</a>
     <button class="today-btn" id="todayBtn">TODAY</button>
     <div class="nav-wrap">
       <button class="nav-btn" id="prevBtn">&#8592;</button>
@@ -800,7 +773,6 @@ body {
       <hr class="detail-divider">
       <div class="detail-notes-label">NOTES</div>
       <div class="detail-notes" id="detailNotes"></div>
-      <button class="detail-delete" id="deleteBtn" onclick="deleteCurrentEvent()" style="display:none">DELETE</button>
     </div>
     <!-- Day events list view (複数イベントがある日) -->
     <div id="detailDayList" style="display:none">
@@ -812,9 +784,10 @@ body {
 
 <script>
 // ═══════════════════════════════════════════════════════════════
-//  CONFIG — ここを編集してください
+//  CONFIG
 // ═══════════════════════════════════════════════════════════════
 const CONFIG = {
+  // Google Sheets公開CSV URL（GASがない場合のフォールバック）
   SHEET_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vScoq3pUsD-UlF1LtD2fzbGYkKu99e5gem0zIA2aIZ2K9hwl8NP13fJ5rEz3CArlGc3diuSXDpxSMJi/pub?gid=0&single=true&output=csv',
   NAME: 'TAKTOSHI MUKAI',
   START_HOUR: 5,   // 週間ビューの開始時刻（0〜23）
@@ -822,14 +795,7 @@ const CONFIG = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-//  MODE — URLパラメータで切り替え
-//  公開用:  index.html          → 月間カレンダーのみ・時刻非表示
-//  管理用:  index.html?private  → 週間切替あり・時刻表示
-// ═══════════════════════════════════════════════════════════════
-const IS_PRIVATE = new URLSearchParams(window.location.search).has('private');
-
-// ═══════════════════════════════════════════════════════════════
-//  SAMPLE DATA — SHEET_URLが未設定の場合はこのデータを使用
+//  SAMPLE DATA — GAS・CSV どちらも読み込めない場合に使用
 // ═══════════════════════════════════════════════════════════════
 const SAMPLE = [
   { date:'2026-03-23', start:'06:00', end:'07:30', theme:'Morning Run 10K',          type:'RUN',       notes:'4:30/km ターゲットペース\nウォームアップ2km + メイン8km' },
@@ -866,9 +832,10 @@ const LEGEND_ITEMS = [
   { type:'race',      label:'RACE' },
 ];
 
-let view    = 'month';
-let current = new Date();
-let events  = [];
+let view       = 'month';
+let current    = new Date();
+let events     = [];
+let dataSource = 'SAMPLE';
 
 // ═══════════════════════════════════════════════════════════════
 //  UTILS
@@ -893,7 +860,7 @@ function typeClass(t) {
   return map[(t||'').toUpperCase()] || 'hyrox';
 }
 
-function typeColor(t) { return TYPE_COLORS[typeClass(t)] || TYPE_COLORS.wod; }
+function typeColor(t) { return TYPE_COLORS[typeClass(t)] || TYPE_COLORS.hyrox; }
 
 function timeToMinutes(t) {
   if (!t) return null;
@@ -912,64 +879,161 @@ function weekStart(d) {
   return dt;
 }
 
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 // ═══════════════════════════════════════════════════════════════
-//  DATA LOADING
+//  JSONP — GAS呼び出し (CORSなし)
+// ═══════════════════════════════════════════════════════════════
+function callScript(url, params) {
+  return new Promise((resolve, reject) => {
+    const cbName = '_hyroxCb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    const qs = Object.entries(params)
+      .map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v))
+      .join('&');
+    const src = url + '?' + qs + '&callback=' + cbName;
+    let timer;
+    window[cbName] = function(data) {
+      clearTimeout(timer);
+      delete window[cbName];
+      script.remove();
+      resolve(data);
+    };
+    timer = setTimeout(function() {
+      delete window[cbName];
+      if (script.parentNode) script.remove();
+      reject(new Error('タイムアウト'));
+    }, 10000);
+    const script = document.createElement('script');
+    script.src = src;
+    script.onerror = function() {
+      clearTimeout(timer);
+      delete window[cbName];
+      reject(new Error('スクリプト読み込みエラー'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CSV PARSER — RFC4180準拠（改行を含むセルに対応）
 // ═══════════════════════════════════════════════════════════════
 function parseCSV(text) {
   const rows = [];
-  const lines = text.trim().split('\n');
-  if (lines.length < 2) return rows;
+  let cur = '', inQ = false, cols = [];
 
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    const cols = [];
-    let cur = '', inQ = false;
-    for (const ch of line) {
-      if (ch === '"') { inQ = !inQ; }
-      else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
-      else { cur += ch; }
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQ) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { cur += '"'; i++; }
+        else { inQ = false; }
+      } else {
+        cur += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQ = true;
+      } else if (ch === ',') {
+        cols.push(cur); cur = '';
+      } else if (ch === '\r' && text[i + 1] === '\n') {
+        cols.push(cur); cur = '';
+        rows.push(cols); cols = [];
+        i++; // skip \n
+      } else if (ch === '\n' || ch === '\r') {
+        cols.push(cur); cur = '';
+        rows.push(cols); cols = [];
+      } else {
+        cur += ch;
+      }
     }
-    cols.push(cur.trim());
-    if (!cols[0]) continue;
-    rows.push({
-      date:  cols[0] || '',
-      start: cols[1] || '',
-      end:   cols[2] || '',
-      theme: cols[3] || '(無題)',
-      type:  cols[4] || 'WOD',
-      notes: cols[5] || '',
+  }
+  // 末尾の残り
+  if (cur || cols.length) { cols.push(cur); rows.push(cols); }
+
+  if (rows.length < 2) return [];
+  const result = [];
+  for (let i = 1; i < rows.length; i++) {
+    const c = rows[i];
+    if (!c[0] || !c[0].trim()) continue;
+    result.push({
+      date:  (c[0] || '').trim(),
+      start: (c[1] || '').trim(),
+      end:   (c[2] || '').trim(),
+      theme: (c[3] || '').trim() || '(無題)',
+      type:  (c[4] || '').trim() || 'WOD',
+      notes: (c[5] || '').trim(),
+      id:    (c[6] || '').trim(),
     });
   }
-  return rows;
+  return result;
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  DATA LOADING
+//  優先順位: GAS (localStorage) → 公開CSV → サンプル
+// ═══════════════════════════════════════════════════════════════
 async function loadEvents() {
-  if (!CONFIG.SHEET_URL) {
-    events = SAMPLE;
-    return;
+  // 1. GAS経由で読み込み（localStorageにURLがある場合）
+  const gasUrl = localStorage.getItem('hyrox_script_url');
+  if (gasUrl) {
+    try {
+      const result = await callScript(gasUrl, { action: 'list' });
+      if (result && Array.isArray(result.entries)) {
+        events = result.entries.map(function(e) {
+          return {
+            date:  e.date  || '',
+            start: e.start || '',
+            end:   e.end   || '',
+            theme: e.theme || '(無題)',
+            type:  e.type  || 'WOD',
+            notes: e.notes || '',
+            id:    e.id    || '',
+          };
+        });
+        dataSource = 'GAS';
+        return;
+      }
+    } catch(err) {
+      console.warn('[HYROX Calendar] GAS読み込み失敗。CSVにフォールバックします。', err);
+    }
   }
-  try {
-    const res = await fetch(CONFIG.SHEET_URL);
-    if (!res.ok) throw new Error('fetch failed');
-    events = parseCSV(await res.text());
-  } catch (e) {
-    console.warn('[HYROX Calendar] Google Sheetsの読み込みに失敗。サンプルデータを使用します。', e);
-    events = SAMPLE;
+
+  // 2. 公開CSV経由で読み込み
+  if (CONFIG.SHEET_URL) {
+    try {
+      const res = await fetch(CONFIG.SHEET_URL);
+      if (!res.ok) throw new Error('HTTPエラー: ' + res.status);
+      const text = await res.text();
+      const parsed = parseCSV(text);
+      if (parsed.length > 0) {
+        events = parsed;
+        dataSource = 'CSV';
+        return;
+      }
+    } catch(err) {
+      console.warn('[HYROX Calendar] CSV読み込み失敗。サンプルデータを使用します。', err);
+    }
   }
+
+  // 3. サンプルデータにフォールバック
+  events = SAMPLE;
+  dataSource = 'SAMPLE';
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  RENDER — LEGEND
 // ═══════════════════════════════════════════════════════════════
 function renderLegend() {
-  return `<div class="legend">${
-    LEGEND_ITEMS.map(li =>
-      `<div class="legend-item">
-        <div class="legend-dot" style="background:${TYPE_COLORS[li.type]}"></div>
-        <span class="legend-label">${li.label}</span>
-      </div>`
-    ).join('')
-  }</div>`;
+  return '<div class="legend">' +
+    LEGEND_ITEMS.map(function(li) {
+      return '<div class="legend-item">' +
+        '<div class="legend-dot" style="background:' + TYPE_COLORS[li.type] + '"></div>' +
+        '<span class="legend-label">' + li.label + '</span>' +
+        '</div>';
+    }).join('') +
+    '</div>';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -978,89 +1042,90 @@ function renderLegend() {
 function renderMonthly() {
   const y = current.getFullYear();
   const m = current.getMonth();
-  document.getElementById('periodLabel').textContent = `${MONTHS[m]} ${y}`;
+  document.getElementById('periodLabel').textContent = MONTHS[m] + ' ' + y;
 
   const firstDay = new Date(y, m, 1);
   const lastDay  = new Date(y, m+1, 0);
   const today    = ymd(new Date());
-  const pad      = firstDay.getDay(); // Sun=0
+  const pad      = firstDay.getDay();
 
   let cells = '';
 
-  // leading empty cells (prev month)
   for (let i = 0; i < pad; i++) {
     const d = new Date(y, m, 1 - (pad - i));
     cells += dayCell(d, true, today);
   }
-  // current month
   for (let d = 1; d <= lastDay.getDate(); d++) {
     cells += dayCell(new Date(y, m, d), false, today);
   }
-  // trailing empty cells
   const total = pad + lastDay.getDate();
   const trail = total % 7 === 0 ? 0 : 7 - (total % 7);
   for (let i = 1; i <= trail; i++) {
     cells += dayCell(new Date(y, m+1, i), true, today);
   }
 
-  const weekdayRow = DAYS.map(d => `<div class="weekday-label">${d}</div>`).join('');
+  const weekdayRow = DAYS.map(function(d) {
+    return '<div class="weekday-label">' + d + '</div>';
+  }).join('');
 
-  return `
-    ${renderLegend()}
-    <div class="monthly-view">
-      <div class="weekday-row">${weekdayRow}</div>
-      <div class="calendar-grid">${cells}</div>
-    </div>
-  `;
+  return renderLegend() +
+    '<div class="monthly-view">' +
+      '<div class="weekday-row">' + weekdayRow + '</div>' +
+      '<div class="calendar-grid">' + cells + '</div>' +
+    '</div>';
 }
 
 function dayCell(date, otherMonth, today) {
-  const ds = ymd(date);
+  const ds   = ymd(date);
   const evts = forDate(ds);
   const isToday = ds === today;
 
   let cls = 'day-cell';
   if (otherMonth) cls += ' other-month';
-  if (isToday) cls += ' is-today';
+  if (isToday)    cls += ' is-today';
 
   const numHtml = isToday
-    ? `<div class="today-dot">${date.getDate()}</div>`
-    : `${date.getDate()}`;
+    ? '<div class="today-dot">' + date.getDate() + '</div>'
+    : date.getDate();
 
-  const chips = evts.slice(0, 3).map((e, i) =>
-    `<span class="event-chip t-${typeClass(e.type)}"
-      onclick="openDetail(event,'${ds}',${events.indexOf(e)})"
-    >${IS_PRIVATE && e.start ? e.start + ' ' : ''}${e.theme}</span>`
-  ).join('');
+  // モバイルではdots、デスクトップではchips
+  const chips = evts.slice(0, 3).map(function(e, i) {
+    const idx = events.indexOf(e);
+    return '<span class="event-chip t-' + typeClass(e.type) + '"' +
+      ' onclick="openDetail(event,\'' + ds + '\',' + idx + ')">' +
+      escHtml(e.theme) +
+      '</span>';
+  }).join('');
 
   const more = evts.length > 3
-    ? `<span class="more-count">+${evts.length - 3} more</span>` : '';
+    ? '<span class="more-count">+' + (evts.length - 3) + '</span>' : '';
 
-  const cellClick = evts.length > 0 ? `onclick="openDayDetail(event,'${ds}')"` : '';
-  return `<div class="${cls}" ${cellClick}>
-    <div class="day-num">${numHtml}</div>
-    <div class="dots-row">${chips}${more}</div>
-  </div>`;
+  // タップ全体でイベント詳細を開く（モバイルでdotsが小さい場合のため）
+  const cellClick = evts.length > 0 ? ' onclick="openDayDetail(event,\'' + ds + '\')"' : '';
+
+  return '<div class="' + cls + '"' + cellClick + '>' +
+    '<div class="day-num">' + numHtml + '</div>' +
+    '<div class="dots-row">' + chips + more + '</div>' +
+    '</div>';
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  RENDER — WEEKLY
 // ═══════════════════════════════════════════════════════════════
 function renderWeekly() {
-  const ws  = weekStart(current);
-  const we  = new Date(ws); we.setDate(we.getDate() + 6);
+  const ws    = weekStart(current);
+  const we    = new Date(ws); we.setDate(we.getDate() + 6);
   const today = ymd(new Date());
 
-  const sLabel = `${ws.getDate()} ${MONTHS[ws.getMonth()].slice(0,3)}`;
-  const eLabel = `${we.getDate()} ${MONTHS[we.getMonth()].slice(0,3)} ${we.getFullYear()}`;
-  document.getElementById('periodLabel').textContent = `${sLabel} – ${eLabel}`;
+  const sLabel = ws.getDate() + ' ' + MONTHS[ws.getMonth()].slice(0,3);
+  const eLabel = we.getDate() + ' ' + MONTHS[we.getMonth()].slice(0,3) + ' ' + we.getFullYear();
+  document.getElementById('periodLabel').textContent = sLabel + ' \u2013 ' + eLabel;
 
-  const START = CONFIG.START_HOUR;
-  const END   = CONFIG.END_HOUR;
-  const HOURS = END - START;
-  const SLOT_H = 60; // px per hour
+  const START  = CONFIG.START_HOUR;
+  const END    = CONFIG.END_HOUR;
+  const HOURS  = END - START;
+  const SLOT_H = 60;
 
-  // Build day columns
   let dayCols = '';
   for (let di = 0; di < 7; di++) {
     const d = new Date(ws); d.setDate(d.getDate() + di);
@@ -1068,102 +1133,86 @@ function renderWeekly() {
     const isToday = ds === today;
     const dayEvts = forDate(ds);
 
-    // Separate all-day from timed
-    const allDay = dayEvts.filter(e => !e.start);
-    const timed  = dayEvts.filter(e =>  e.start);
+    const allDay = dayEvts.filter(function(e) { return !e.start; });
+    const timed  = dayEvts.filter(function(e) { return  e.start; });
 
-    // All-day bars (rendered at top of slot area)
-    const allDayHtml = allDay.map(e => {
+    const allDayHtml = allDay.map(function(e) {
       const idx = events.indexOf(e);
-      return `<div class="event-chip t-${typeClass(e.type)} all-day-bar"
-        style="border-left-color:${typeColor(e.type)};cursor:pointer;display:block;margin:2px 3px;"
-        onclick="openDetail(event,'${ds}',${idx})"
-      >${e.theme}</div>`;
+      return '<div class="event-chip t-' + typeClass(e.type) + ' all-day-bar"' +
+        ' style="border-left-color:' + typeColor(e.type) + ';cursor:pointer;display:block;margin:2px 3px;"' +
+        ' onclick="openDetail(event,\'' + ds + '\',' + idx + ')">' +
+        escHtml(e.theme) +
+        '</div>';
     }).join('');
 
-    // Time slots
     let slots = allDayHtml;
-    slots += `<div style="position:relative;height:${HOURS * SLOT_H}px;">`;
+    slots += '<div style="position:relative;height:' + (HOURS * SLOT_H) + 'px;">';
 
-    // Hour grid lines
     for (let h = 0; h < HOURS; h++) {
-      slots += `<div style="position:absolute;top:${h*SLOT_H}px;left:0;right:0;height:${SLOT_H}px;border-bottom:1px solid var(--border);"></div>`;
+      slots += '<div style="position:absolute;top:' + (h*SLOT_H) + 'px;left:0;right:0;height:' + SLOT_H + 'px;border-bottom:1px solid var(--border);"></div>';
+    }
+    for (let h = 0; h < HOURS; h++) {
+      slots += '<div style="position:absolute;top:' + (h*SLOT_H + SLOT_H/2) + 'px;left:0;right:0;border-bottom:1px dashed var(--border);opacity:0.4;"></div>';
     }
 
-    // Half-hour lines
-    for (let h = 0; h < HOURS; h++) {
-      slots += `<div style="position:absolute;top:${h*SLOT_H + SLOT_H/2}px;left:0;right:0;border-bottom:1px dashed var(--border);opacity:0.4;"></div>`;
-    }
-
-    // Event blocks
-    timed.forEach(e => {
+    timed.forEach(function(e) {
       const startMin = timeToMinutes(e.start);
       if (startMin === null) return;
-      const endMin = e.end ? timeToMinutes(e.end) : startMin + 60;
-
+      const endMin   = e.end ? timeToMinutes(e.end) : startMin + 60;
       const topPx    = (startMin - START * 60) / 60 * SLOT_H;
       const heightPx = Math.max(22, (endMin - startMin) / 60 * SLOT_H - 2);
+      if (topPx < 0 || topPx > HOURS * SLOT_H) return;
 
-      if (topPx < 0 || topPx > HOURS * SLOT_H) return; // out of range
-
-      const idx = events.indexOf(e);
+      const idx   = events.indexOf(e);
       const color = typeColor(e.type);
-      slots += `<div class="wk-event t-${typeClass(e.type)}"
-        style="top:${topPx}px;height:${heightPx}px;border-left-color:${color};"
-        onclick="openDetail(event,'${ds}',${idx})"
-      >
-        <div class="wk-event-time">${e.start}${e.end ? ' – '+e.end : ''}</div>
-        <div class="wk-event-theme">${e.theme}</div>
-      </div>`;
+      slots += '<div class="wk-event t-' + typeClass(e.type) + '"' +
+        ' style="top:' + topPx + 'px;height:' + heightPx + 'px;border-left-color:' + color + ';"' +
+        ' onclick="openDetail(event,\'' + ds + '\',' + idx + ')">' +
+        '<div class="wk-event-time">' + e.start + (e.end ? ' \u2013 ' + e.end : '') + '</div>' +
+        '<div class="wk-event-theme">' + escHtml(e.theme) + '</div>' +
+        '</div>';
     });
 
-    slots += `</div>`;
+    slots += '</div>';
 
-    dayCols += `<div class="day-col${isToday ? ' wk-today' : ''}">
-      <div class="day-col-header">
-        <div class="wk-day-name">${DAYS[d.getDay()]}</div>
-        <div class="wk-day-num">${d.getDate()}</div>
-      </div>
-      <div class="day-slots">${slots}</div>
-    </div>`;
+    dayCols += '<div class="day-col' + (isToday ? ' wk-today' : '') + '">' +
+      '<div class="day-col-header">' +
+        '<div class="wk-day-name">' + DAYS[d.getDay()] + '</div>' +
+        '<div class="wk-day-num">' + d.getDate() + '</div>' +
+      '</div>' +
+      '<div class="day-slots">' + slots + '</div>' +
+      '</div>';
   }
 
-  // Time column
-  let timeCol = `<div class="time-col">
-    <div class="time-col-header"></div>`;
+  let timeCol = '<div class="time-col"><div class="time-col-header"></div>';
   for (let h = START; h < END; h++) {
-    timeCol += `<div class="time-label">${String(h).padStart(2,'0')}:00</div>`;
+    timeCol += '<div class="time-label">' + String(h).padStart(2,'0') + ':00</div>';
   }
-  timeCol += `</div>`;
+  timeCol += '</div>';
 
-  return `
-    ${renderLegend()}
-    <div class="weekly-view">
-      <div class="week-wrapper">
-        ${timeCol}
-        <div class="days-wrap">${dayCols}</div>
-      </div>
-    </div>
-  `;
+  return renderLegend() +
+    '<div class="weekly-view">' +
+      '<div class="week-wrapper">' +
+        timeCol +
+        '<div class="days-wrap">' + dayCols + '</div>' +
+      '</div>' +
+    '</div>';
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  DETAIL PANEL
 // ═══════════════════════════════════════════════════════════════
-let _currentEventIdx = -1;
-
 function openDetail(ev, dateStr, idx) {
   ev.stopPropagation();
   const e = events[idx];
   if (!e) return;
-  _currentEventIdx = idx;
 
   const d = parseYMD(dateStr);
-  const dateLabel = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${DAYS[d.getDay()]}）`;
-  const typeLabel = typeClass(e.type).toUpperCase();
-  const timeLabel = IS_PRIVATE
-    ? (e.start ? `${e.start}${e.end ? '  →  ' + e.end : ''}  |  ${typeLabel}` : `ALL DAY  |  ${typeLabel}`)
-    : typeLabel;
+  const dateLabel  = d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日（' + DAYS[d.getDay()] + '）';
+  const typeLabel  = typeClass(e.type).toUpperCase();
+  const timeLabel  = e.start
+    ? (e.start + (e.end ? '  →  ' + e.end : '') + '  |  ' + typeLabel)
+    : ('ALL DAY  |  ' + typeLabel);
 
   document.getElementById('detailBar').style.background  = typeColor(e.type);
   document.getElementById('detailDateStr').textContent   = dateLabel;
@@ -1172,7 +1221,6 @@ function openDetail(ev, dateStr, idx) {
   document.getElementById('detailNotes').textContent     = e.notes || '—';
   document.getElementById('detailSingle').style.display  = '';
   document.getElementById('detailDayList').style.display = 'none';
-  document.getElementById('deleteBtn').style.display     = IS_PRIVATE ? '' : 'none';
 
   document.getElementById('overlay').classList.add('open');
 }
@@ -1187,31 +1235,21 @@ function openDayDetail(ev, dateStr) {
   }
   // 複数イベント → リスト表示
   const d = parseYMD(dateStr);
-  const dateLabel = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${DAYS[d.getDay()]}）`;
+  const dateLabel = d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日（' + DAYS[d.getDay()] + '）';
   document.getElementById('listDateStr').textContent = dateLabel;
-  document.getElementById('listItems').innerHTML = evts.map(e => {
-    const idx = events.indexOf(e);
-    const timeStr = e.start ? `${e.start}${e.end ? ' \u2013 ' + e.end : ''}` : 'ALL DAY';
-    return `<div class="day-list-item t-${typeClass(e.type)}"
-      onclick="openDetail(event,'${dateStr}',${idx})"
-      style="border-left-color:${typeColor(e.type)}">
-      <div class="day-list-theme">${e.theme}</div>
-      <div class="day-list-time">${timeStr}</div>
-    </div>`;
+  document.getElementById('listItems').innerHTML = evts.map(function(e) {
+    const idx     = events.indexOf(e);
+    const timeStr = e.start ? (e.start + (e.end ? ' \u2013 ' + e.end : '')) : 'ALL DAY';
+    return '<div class="day-list-item t-' + typeClass(e.type) + '"' +
+      ' onclick="openDetail(event,\'' + dateStr + '\',' + idx + ')"' +
+      ' style="border-left-color:' + typeColor(e.type) + '">' +
+      '<div class="day-list-theme">' + escHtml(e.theme) + '</div>' +
+      '<div class="day-list-time">' + escHtml(timeStr) + '</div>' +
+      '</div>';
   }).join('');
   document.getElementById('detailSingle').style.display  = 'none';
   document.getElementById('detailDayList').style.display = '';
   document.getElementById('overlay').classList.add('open');
-}
-
-function deleteCurrentEvent() {
-  if (_currentEventIdx < 0 || _currentEventIdx >= events.length) return;
-  const theme = events[_currentEventIdx].theme;
-  if (!confirm(`「${theme}」を削除しますか？\n（ページをリロードすると元に戻ります）`)) return;
-  events.splice(_currentEventIdx, 1);
-  _currentEventIdx = -1;
-  closeDetail();
-  render();
 }
 
 function closeDetail() {
@@ -1222,8 +1260,7 @@ function closeDetail() {
 //  NAVIGATION & RENDER
 // ═══════════════════════════════════════════════════════════════
 function navigate(dir) {
-  // 公開モードは常に月単位
-  if (!IS_PRIVATE || view === 'month') {
+  if (view === 'month') {
     current.setMonth(current.getMonth() + dir);
   } else {
     current.setDate(current.getDate() + dir * 7);
@@ -1237,7 +1274,6 @@ function goToday() {
 }
 
 function setView(v) {
-  if (!IS_PRIVATE) return; // 公開モードは切り替え不可
   view = v;
   document.getElementById('btnMonth').classList.toggle('active', v === 'month');
   document.getElementById('btnWeek').classList.toggle('active',  v === 'week');
@@ -1245,38 +1281,31 @@ function setView(v) {
 }
 
 function render() {
-  // 公開モードは月表示のみ
-  const html = (!IS_PRIVATE || view === 'month') ? renderMonthly() : renderWeekly();
-  const dataSource = CONFIG.SHEET_URL ? 'Connected' : 'SAMPLE DATA';
-  // 公開モードではステータスバーを非表示
-  const statusHtml = IS_PRIVATE ? `
-    <div class="status-bar" style="margin-top:16px;">
-      <span class="status-left">HYROX TRAINING CALENDAR — ${CONFIG.NAME}</span>
-      <span class="status-right">DATA: ${dataSource} · ${events.length} EVENTS</span>
-    </div>` : '';
+  const html = (view === 'month') ? renderMonthly() : renderWeekly();
+  const sourceLabel = { GAS: 'LIVE · GAS', CSV: 'CSV', SAMPLE: 'SAMPLE DATA' }[dataSource] || dataSource;
+  const statusHtml =
+    '<div class="status-bar" style="margin-top:16px;">' +
+      '<span class="status-left">HYROX TRAINING CALENDAR \u2014 ' + CONFIG.NAME + '</span>' +
+      '<span class="status-right">DATA: ' + sourceLabel + ' · ' + events.length + ' EVENTS</span>' +
+    '</div>';
   document.getElementById('main').innerHTML = html + statusHtml;
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════════
-document.getElementById('prevBtn').addEventListener('click',  () => navigate(-1));
-document.getElementById('nextBtn').addEventListener('click',  () => navigate(1));
+document.getElementById('prevBtn').addEventListener('click',  function() { navigate(-1); });
+document.getElementById('nextBtn').addEventListener('click',  function() { navigate(1); });
 document.getElementById('todayBtn').addEventListener('click', goToday);
-document.getElementById('btnMonth').addEventListener('click', () => setView('month'));
-document.getElementById('btnWeek').addEventListener('click',  () => setView('week'));
+document.getElementById('btnMonth').addEventListener('click', function() { setView('month'); });
+document.getElementById('btnWeek').addEventListener('click',  function() { setView('week'); });
 document.getElementById('closeBtn').addEventListener('click', closeDetail);
 document.getElementById('overlay').addEventListener('click', function(e) {
   if (e.target === this) closeDetail();
 });
-document.addEventListener('keydown', e => {
+document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeDetail();
 });
-
-// 公開モード: 週間切替ボタンを非表示
-if (!IS_PRIVATE) {
-  document.querySelector('.view-toggle').style.display = 'none';
-}
 
 loadEvents().then(render);
 
