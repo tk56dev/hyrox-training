@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MUKAI | TRAINING ADMIN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --black:   #000;
+  --bg1:     #0D0D0D;
+  --bg2:     #141414;
+  --bg3:     #1E1E1E;
+  --border:  #2A2A2A;
+  --border2: #383838;
+  --muted:   #555;
+  --sub:     #888;
+  --text:    #FFF;
+  --red:     #E30613;
+  --red-dim: #7a030a;
+  --green:   #16A34A;
+  --blue:    #2563EB;
+  --orange:  #D97706;
+}
+
+html, body { height: 100%; }
+
+body {
+  background: var(--black);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── HEADER ─── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  height: 60px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--black);
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-name {
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.brand-sep {
+  color: var(--muted);
+  font-weight: 300;
+}
+
+.brand-section {
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sub);
+}
+
+.back-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--sub);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  transition: all 0.12s;
+}
+.back-link:hover { color: var(--text); border-color: var(--text); }
+
+/* ─── MAIN ─── */
+.main {
+  flex: 1;
+  padding: 32px 40px;
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .main { grid-template-columns: 1fr; padding: 20px; }
+  .header { padding: 0 20px; }
+}
+
+/* ─── FORM PANEL ─── */
+.panel {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+}
+
+.panel-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel-title {
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sub);
+}
+
+.panel-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Form fields */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+input[type="date"],
+input[type="time"],
+input[type="text"],
+textarea {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 12px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.12s;
+  -webkit-appearance: none;
+  border-radius: 0;
+}
+
+input[type="date"]:focus,
+input[type="time"]:focus,
+input[type="text"]:focus,
+textarea:focus {
+  border-color: var(--border2);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+  cursor: pointer;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.5;
+}
+
+/* Type selector */
+.type-selector {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+
+.type-btn {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--sub);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 8px 4px;
+  cursor: pointer;
+  transition: all 0.12s;
+  text-align: center;
+}
+
+.type-btn:hover { border-color: var(--border2); color: var(--text); }
+
+.type-btn.active[data-type="HYROX"]     { background: var(--red);    border-color: var(--red);    color: #fff; }
+.type-btn.active[data-type="RUN"]       { background: var(--green);  border-color: var(--green);  color: #fff; }
+.type-btn.active[data-type="STRENGTH"]  { background: var(--blue);   border-color: var(--blue);   color: #fff; }
+.type-btn.active[data-type="ENDURANCE"] { background: var(--orange); border-color: var(--orange); color: #fff; }
+.type-btn.active[data-type="RACE"]      { background: var(--red);    border-color: var(--red);    color: #fff; font-weight: 800; }
+
+/* Submit button */
+.submit-btn {
+  width: 100%;
+  background: var(--text);
+  color: var(--black);
+  border: none;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 14px;
+  cursor: pointer;
+  transition: opacity 0.12s;
+  margin-top: 4px;
+}
+.submit-btn:hover { opacity: 0.85; }
+.submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ─── ENTRIES LIST ─── */
+.entries-panel {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+}
+
+.entries-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.entries-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.refresh-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--sub);
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.refresh-btn:hover { border-color: var(--text); color: var(--text); }
+
+.entries-list {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+.entry-row {
+  display: grid;
+  grid-template-columns: 8px 90px 60px 1fr 80px 36px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.entry-row:hover { background: var(--bg2); }
+.entry-row:last-child { border-bottom: none; }
+
+.entry-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.entry-date {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sub);
+  white-space: nowrap;
+}
+
+.entry-time {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.entry-theme {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entry-type {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: right;
+}
+
+.entry-delete {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.12s;
+  flex-shrink: 0;
+}
+.entry-delete:hover { border-color: var(--red); color: var(--red); }
+
+.entries-empty {
+  padding: 48px 20px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.entries-loading {
+  padding: 48px 20px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ─── TOAST ─── */
+.toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: var(--text);
+  color: var(--black);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 10px 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s;
+  z-index: 500;
+  white-space: nowrap;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.toast.error { background: var(--red); color: #fff; }
+
+/* ─── SETUP MODAL ─── */
+.setup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.setup-panel {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 36px;
+}
+
+.setup-title {
+  font-weight: 800;
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+.setup-sub {
+  font-size: 13px;
+  color: var(--sub);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.setup-step {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 6px;
+  margin-top: 20px;
+}
+.setup-step:first-of-type { margin-top: 0; }
+
+.setup-desc {
+  font-size: 13px;
+  color: var(--sub);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.code-block {
+  background: var(--black);
+  border: 1px solid var(--border);
+  padding: 14px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #aaa;
+  white-space: pre;
+  overflow-x: auto;
+  margin-bottom: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.copy-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--sub);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.12s;
+  margin-bottom: 16px;
+}
+.copy-btn:hover { border-color: var(--text); color: var(--text); }
+
+.setup-input-wrap {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.setup-url-input {
+  flex: 1;
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  padding: 10px 12px;
+  outline: none;
+}
+
+.setup-save-btn {
+  background: var(--text);
+  color: var(--black);
+  border: none;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 10px 20px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+  </style>
+</head>
+<body>
+
+<!-- SETUP MODAL (shown when Apps Script URL is not configured) -->
+<div class="setup-overlay" id="setupOverlay" style="display:none">
+  <div class="setup-panel">
+    <div class="setup-title">初回セットアップ</div>
+    <div class="setup-sub">データの書き込み・削除のために Google Apps Script を一度だけ設定してください。5分で完了します。</div>
+
+    <div class="setup-step">STEP 1 — Google Apps Scriptを開く</div>
+    <div class="setup-desc">Google スプレッドシートを開き、「<strong>拡張機能</strong>」→「<strong>Apps Script</strong>」をクリック</div>
+
+    <div class="setup-step">STEP 2 — コードを貼り付ける</div>
+    <div class="setup-desc">既存のコードをすべて削除し、以下をコピー＆ペーストして保存（Ctrl+S）</div>
+
+    <div class="code-block" id="scriptCode">function doGet(e) {
+  const action  = e.parameter.action;
+  const ss      = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet   = ss.getSheetByName('Sheet1') || ss.getSheets()[0];
+  let result    = { success: false, action: action };
+
+  if (action === 'add') {
+    sheet.appendRow([
+      e.parameter.date  || '',
+      e.parameter.start || '',
+      e.parameter.end   || '',
+      e.parameter.theme || '',
+      e.parameter.type  || '',
+      e.parameter.notes || ''
+    ]);
+    result.success = true;
+  }
+
+  else if (action === 'delete') {
+    const d = e.parameter.date;
+    const t = e.parameter.theme;
+    const rows = sheet.getDataRange().getValues();
+    for (let i = rows.length - 1; i >= 1; i--) {
+      if (String(rows[i][0]).trim() === d && rows[i][3] === t) {
+        sheet.deleteRow(i + 1);
+        result.success = true;
+        break;
+      }
+    }
+  }
+
+  const cb = e.parameter.callback;
+  const body = cb
+    ? cb + '(' + JSON.stringify(result) + ')'
+    : JSON.stringify(result);
+  const mime = cb
+    ? ContentService.MimeType.JAVASCRIPT
+    : ContentService.MimeType.JSON;
+
+  return ContentService.createTextOutput(body).setMimeType(mime);
+}</div>
+    <button class="copy-btn" onclick="copyScript()">コードをコピー</button>
+
+    <div class="setup-step">STEP 3 — ウェブアプリとしてデプロイ</div>
+    <div class="setup-desc">
+      1. 右上「<strong>デプロイ</strong>」→「<strong>新しいデプロイ</strong>」<br>
+      2. 種類：「ウェブアプリ」を選択<br>
+      3. アクセスできるユーザー：「<strong>全員</strong>」に設定<br>
+      4. 「<strong>デプロイ</strong>」→ 表示されたURLをコピー
+    </div>
+
+    <div class="setup-step">STEP 4 — URLをここに入力して保存</div>
+    <div class="setup-input-wrap">
+      <input class="setup-url-input" id="scriptUrlInput" type="text" placeholder="https://script.google.com/macros/s/..." />
+      <button class="setup-save-btn" onclick="saveScriptUrl()">SAVE</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="brand">
+    <span class="brand-name">MUKAI</span>
+    <span class="brand-sep">/</span>
+    <span class="brand-section">Training Admin</span>
+  </div>
+  <a class="back-link" href="index.html?private">← CALENDAR</a>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- FORM PANEL -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Add Entry</span>
+    </div>
+    <div class="panel-body">
+
+      <div class="field">
+        <label class="field-label">Date</label>
+        <input type="date" id="fDate" required>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Time（任意）</label>
+        <div class="field-row">
+          <input type="time" id="fStart" placeholder="Start">
+          <input type="time" id="fEnd" placeholder="End">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Theme</label>
+        <input type="text" id="fTheme" placeholder="Morning Run 10K" required>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Type</label>
+        <div class="type-selector" id="typeSelector">
+          <button class="type-btn active" data-type="HYROX">HYROX</button>
+          <button class="type-btn" data-type="RUN">RUN</button>
+          <button class="type-btn" data-type="STRENGTH">STR</button>
+          <button class="type-btn" data-type="ENDURANCE">END</button>
+          <button class="type-btn" data-type="RACE">RACE</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Notes（任意）</label>
+        <textarea id="fNotes" placeholder="メニュー・目標ペース等"></textarea>
+      </div>
+
+      <button class="submit-btn" id="submitBtn" onclick="addEntry()">+ ADD TRAINING</button>
+
+    </div>
+  </div>
+
+  <!-- ENTRIES PANEL -->
+  <div class="entries-panel">
+    <div class="entries-header">
+      <span class="panel-title">All Entries</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="entries-count" id="entriesCount">—</span>
+        <button class="refresh-btn" onclick="loadEntries()">↻ REFRESH</button>
+      </div>
+    </div>
+    <div class="entries-list" id="entriesList">
+      <div class="entries-loading">Loading...</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════════════
+const CONFIG = {
+  SHEET_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vScoq3pUsD-UlF1LtD2fzbGYkKu99e5gem0zIA2aIZ2K9hwl8NP13fJ5rEz3CArlGc3diuSXDpxSMJi/pub?gid=0&single=true&output=csv',
+};
+
+// Apps Script URLはlocalStorageに保存
+let SCRIPT_URL = localStorage.getItem('hyrox_script_url') || '';
+
+// ─── 非公開チェック ───────────────────────────────────────────
+if (!new URLSearchParams(window.location.search).has('private')) {
+  window.location.replace('index.html');
+}
+
+// ─── タイプカラー ─────────────────────────────────────────────
+const TYPE_COLORS = {
+  HYROX: '#E30613', RUN: '#16A34A', STRENGTH: '#2563EB',
+  ENDURANCE: '#D97706', RACE: '#E30613'
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  SETUP
+// ═══════════════════════════════════════════════════════════════
+function checkSetup() {
+  if (!SCRIPT_URL) {
+    document.getElementById('setupOverlay').style.display = 'flex';
+  }
+}
+
+function saveScriptUrl() {
+  const url = document.getElementById('scriptUrlInput').value.trim();
+  if (!url.startsWith('https://script.google.com/')) {
+    showToast('URLが正しくありません', true);
+    return;
+  }
+  SCRIPT_URL = url;
+  localStorage.setItem('hyrox_script_url', url);
+  document.getElementById('setupOverlay').style.display = 'none';
+  showToast('Apps Script URLを保存しました');
+  loadEntries();
+}
+
+function copyScript() {
+  const code = document.getElementById('scriptCode').textContent;
+  navigator.clipboard.writeText(code).then(() => showToast('コードをコピーしました'));
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TYPE SELECTOR
+// ═══════════════════════════════════════════════════════════════
+let selectedType = 'HYROX';
+
+document.getElementById('typeSelector').addEventListener('click', (e) => {
+  const btn = e.target.closest('.type-btn');
+  if (!btn) return;
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedType = btn.dataset.type;
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  CSV PARSING
+// ═══════════════════════════════════════════════════════════════
+function parseCSV(text) {
+  const rows = [];
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return rows;
+  for (let i = 1; i < lines.length; i++) {
+    const cols = [];
+    let cur = '', inQ = false;
+    for (const ch of lines[i]) {
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+      else { cur += ch; }
+    }
+    cols.push(cur.trim());
+    if (!cols[0]) continue;
+    rows.push({ date: cols[0], start: cols[1]||'', end: cols[2]||'', theme: cols[3]||'', type: cols[4]||'HYROX', notes: cols[5]||'' });
+  }
+  return rows;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LOAD ENTRIES
+// ═══════════════════════════════════════════════════════════════
+let allEntries = [];
+
+async function loadEntries() {
+  const list = document.getElementById('entriesList');
+  list.innerHTML = '<div class="entries-loading">Loading...</div>';
+
+  try {
+    const res = await fetch(CONFIG.SHEET_CSV_URL + '&t=' + Date.now());
+    const text = await res.text();
+    allEntries = parseCSV(text);
+    renderEntries();
+  } catch (e) {
+    list.innerHTML = '<div class="entries-empty">データを読み込めませんでした</div>';
+  }
+}
+
+function renderEntries() {
+  const list = document.getElementById('entriesList');
+  const count = document.getElementById('entriesCount');
+
+  if (allEntries.length === 0) {
+    list.innerHTML = '<div class="entries-empty">エントリーなし</div>';
+    count.textContent = '0 entries';
+    return;
+  }
+
+  count.textContent = allEntries.length + ' entries';
+
+  // Sort by date descending
+  const sorted = [...allEntries].sort((a, b) => b.date.localeCompare(a.date));
+
+  list.innerHTML = sorted.map(e => {
+    const color = TYPE_COLORS[e.type.toUpperCase()] || TYPE_COLORS.HYROX;
+    const timeStr = e.start ? (e.end ? `${e.start}–${e.end}` : e.start) : '—';
+    const dateFormatted = formatDate(e.date);
+    const escapedDate  = e.date.replace(/'/g, "\\'");
+    const escapedTheme = e.theme.replace(/'/g, "\\'");
+
+    return `<div class="entry-row">
+      <div class="entry-dot" style="background:${color}"></div>
+      <div class="entry-date">${dateFormatted}</div>
+      <div class="entry-time">${timeStr}</div>
+      <div class="entry-theme" title="${e.theme}">${e.theme}</div>
+      <div class="entry-type">${e.type}</div>
+      <button class="entry-delete" onclick="deleteEntry('${escapedDate}','${escapedTheme}')" title="削除">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function formatDate(str) {
+  const [y, m, d] = str.split('-');
+  if (!y || !m || !d) return str;
+  const days = ['日','月','火','水','木','金','土'];
+  const dt = new Date(+y, +m - 1, +d);
+  return `${m}/${d}（${days[dt.getDay()]}）`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  JSONP CALL (CORS-free)
+// ═══════════════════════════════════════════════════════════════
+function callScript(params) {
+  return new Promise((resolve, reject) => {
+    if (!SCRIPT_URL) { reject(new Error('No script URL')); return; }
+
+    const cbName = 'hyrox_cb_' + Date.now();
+    const url = SCRIPT_URL + '?' + new URLSearchParams({ ...params, callback: cbName });
+
+    window[cbName] = (data) => {
+      delete window[cbName];
+      if (script.parentNode) document.head.removeChild(script);
+      resolve(data);
+    };
+
+    const script = document.createElement('script');
+    script.src = url;
+    script.onerror = () => {
+      delete window[cbName];
+      reject(new Error('Script error'));
+    };
+
+    // タイムアウト 8秒
+    const timer = setTimeout(() => {
+      delete window[cbName];
+      if (script.parentNode) document.head.removeChild(script);
+      reject(new Error('Timeout'));
+    }, 8000);
+
+    script.onload = () => clearTimeout(timer);
+    document.head.appendChild(script);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ADD ENTRY
+// ═══════════════════════════════════════════════════════════════
+async function addEntry() {
+  const date  = document.getElementById('fDate').value;
+  const theme = document.getElementById('fTheme').value.trim();
+
+  if (!date || !theme) {
+    showToast('Date と Theme は必須です', true);
+    return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  try {
+    const result = await callScript({
+      action: 'add',
+      date,
+      start: document.getElementById('fStart').value,
+      end:   document.getElementById('fEnd').value,
+      theme,
+      type:  selectedType,
+      notes: document.getElementById('fNotes').value.trim(),
+    });
+
+    if (result.success) {
+      showToast('追加しました ✓');
+      resetForm();
+      // 1秒後にリロード（Sheetsへの反映を待つ）
+      setTimeout(loadEntries, 1000);
+    } else {
+      showToast('保存に失敗しました', true);
+    }
+  } catch (e) {
+    showToast('エラー: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '+ ADD TRAINING';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DELETE ENTRY
+// ═══════════════════════════════════════════════════════════════
+async function deleteEntry(date, theme) {
+  if (!confirm(`「${theme}」を削除しますか？`)) return;
+
+  try {
+    const result = await callScript({ action: 'delete', date, theme });
+    if (result.success) {
+      showToast('削除しました');
+      setTimeout(loadEntries, 1000);
+    } else {
+      showToast('削除に失敗しました', true);
+    }
+  } catch (e) {
+    showToast('エラー: ' + e.message, true);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════════
+function resetForm() {
+  document.getElementById('fDate').valueAsDate  = new Date();
+  document.getElementById('fStart').value = '';
+  document.getElementById('fEnd').value   = '';
+  document.getElementById('fTheme').value = '';
+  document.getElementById('fNotes').value = '';
+  // Reset type to HYROX
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.type-btn[data-type="HYROX"]').classList.add('active');
+  selectedType = 'HYROX';
+}
+
+let toastTimer = null;
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  void t.offsetWidth;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('fDate').valueAsDate = new Date();
+checkSetup();
+loadEntries();
+
+// Enter キーで送信
+document.getElementById('fTheme').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addEntry();
+});
+</script>
+</body>
+</html>
