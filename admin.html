@@ -751,10 +751,13 @@ async function loadEntries() {
   list.innerHTML = '<div class="entries-loading">Loading...</div>';
 
   try {
-    const res = await fetch(CONFIG.SHEET_CSV_URL + '&t=' + Date.now());
-    const text = await res.text();
-    allEntries = parseCSV(text);
-    renderEntries();
+    const result = await callScript({ action: 'list' });
+    if (result.success) {
+      allEntries = result.entries;
+      renderEntries();
+    } else {
+      list.innerHTML = '<div class="entries-empty">データを読み込めませんでした</div>';
+    }
   } catch (e) {
     list.innerHTML = '<div class="entries-empty">データを読み込めませんでした</div>';
   }
@@ -809,7 +812,7 @@ function callScript(params) {
     if (!SCRIPT_URL) { reject(new Error('No script URL')); return; }
 
     const cbName = 'hyrox_cb_' + Date.now();
-    const url = SCRIPT_URL + '?' + new URLSearchParams({ ...params, callback: cbName });
+    const url = SCRIPT_URL + '?' + new URLSearchParams({ ...params, callback: cbName, _t: Date.now() });
 
     window[cbName] = (data) => {
       delete window[cbName];
@@ -864,10 +867,18 @@ async function addEntry() {
     });
 
     if (result.success) {
+      // 楽観的UI更新：即座にリストに追加
+      allEntries.unshift({
+        date,
+        start: document.getElementById('fStart').value,
+        end:   document.getElementById('fEnd').value,
+        theme,
+        type:  selectedType,
+        notes: document.getElementById('fNotes').value.trim(),
+      });
+      renderEntries();
       showToast('追加しました ✓');
       resetForm();
-      // 1秒後にリロード（Sheetsへの反映を待つ）
-      setTimeout(loadEntries, 1000);
     } else {
       showToast('保存に失敗しました', true);
     }
@@ -885,15 +896,23 @@ async function addEntry() {
 async function deleteEntry(date, theme) {
   if (!confirm(`「${theme}」を削除しますか？`)) return;
 
+  // 楽観的UI更新：即座にリストから削除
+  const prev = allEntries.slice();
+  allEntries = allEntries.filter(e => !(e.date === date && e.theme === theme));
+  renderEntries();
+  showToast('削除しました');
+
   try {
     const result = await callScript({ action: 'delete', date, theme });
-    if (result.success) {
-      showToast('削除しました');
-      setTimeout(loadEntries, 1000);
-    } else {
+    if (!result.success) {
+      // GAS側で失敗した場合は元に戻す
+      allEntries = prev;
+      renderEntries();
       showToast('削除に失敗しました', true);
     }
   } catch (e) {
+    allEntries = prev;
+    renderEntries();
     showToast('エラー: ' + e.message, true);
   }
 }
