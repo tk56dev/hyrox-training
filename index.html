@@ -21,6 +21,8 @@
   --text:     #FFFFFF;
   --red:      #E30613;
   --red-dim:  #7a030a;
+  --yellow:   #FACC15;
+  --yellow-dim: #78600a;
   --green:    #16A34A;
   --blue:     #2563EB;
   --orange:   #D97706;
@@ -333,7 +335,7 @@ body {
 
 .event-chip:hover { background: rgba(255,255,255,0.1); }
 
-.event-chip.t-hyrox     { border-color: var(--red); }
+.event-chip.t-hyrox     { border-color: var(--yellow); }
 .event-chip.t-run       { border-color: var(--green); }
 .event-chip.t-strength  { border-color: var(--blue); }
 .event-chip.t-endurance { border-color: var(--orange); }
@@ -363,7 +365,7 @@ body {
     pointer-events: none; /* タップは日付セル全体で受ける */
   }
   .event-chip::after { display: none !important; }
-  .event-chip.t-hyrox     { background: var(--red) !important; }
+  .event-chip.t-hyrox     { background: var(--yellow) !important; }
   .event-chip.t-run       { background: var(--green) !important; }
   .event-chip.t-strength  { background: var(--blue) !important; }
   .event-chip.t-endurance { background: var(--orange) !important; }
@@ -513,7 +515,7 @@ body {
   text-overflow: ellipsis;
 }
 
-.wk-event.t-hyrox     { border-color: var(--red); }
+.wk-event.t-hyrox     { border-color: var(--yellow); }
 .wk-event.t-run       { border-color: var(--green); }
 .wk-event.t-strength  { border-color: var(--blue); }
 .wk-event.t-endurance { border-color: var(--orange); }
@@ -823,7 +825,7 @@ const SAMPLE = [
 // ═══════════════════════════════════════════════════════════════
 const MONTHS  = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
 const DAYS    = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-const TYPE_COLORS = { hyrox:'#E30613', run:'#16A34A', strength:'#2563EB', endurance:'#D97706', race:'#E30613' };
+const TYPE_COLORS = { hyrox:'#FACC15', run:'#16A34A', strength:'#2563EB', endurance:'#D97706', race:'#E30613' };
 const LEGEND_ITEMS = [
   { type:'hyrox',     label:'HYROX' },
   { type:'run',       label:'RUN' },
