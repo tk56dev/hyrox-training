@@ -375,7 +375,7 @@ body {
   .calendar-grid { grid-auto-rows: minmax(70px, 1fr); }
   .day-cell { padding: 6px 4px; display: flex; flex-direction: column; }
   .dots-row { display: flex; flex-wrap: wrap; }
-  /* more-count も見やすく */
+  /* more-count ア見やすく */
   .more-count { font-size: 9px; padding: 2px 4px; }
 }
 
@@ -1111,7 +1111,7 @@ function openDetail(ev, dateStr, idx) {
   if (!e) return;
 
   const d = parseYMD(dateStr);
-  const dateLabel = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${DAYS[d.getDay()]}）`;
+  const dateLabel = `${d.getFullYear()}�t${d.getMonth()+1}月${d.getDate()}日（${DAYS[d.getDay()]}）`;
   const typeLabel = typeClass(e.type).toUpperCase();
   const timeLabel = IS_PRIVATE
     ? (e.start ? `${e.start}${e.end ? '  →  ' + e.end : ''}  |  ${typeLabel}` : `ALL DAY  |  ${typeLabel}`)
@@ -1134,7 +1134,7 @@ function closeDetail() {
 //  NAVIGATION & RENDER
 // ═══════════════════════════════════════════════════════════════
 function navigate(dir) {
-  // 公開モードは常に月単位
+  // 公開モードは常に月単$��
   if (!IS_PRIVATE || view === 'month') {
     current.setMonth(current.getMonth() + dir);
   } else {
